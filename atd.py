@@ -24,11 +24,12 @@ Os dados deste Dashboard são atualizados automaticamente a partir de uma planil
 """)
 
 # ----------- Botão de atualização manual do cache (solução do problema) -----------
+# Inicializa a variável de sessão 'atualizar' se ela não existir
 if 'atualizar' not in st.session_state:
-    st.session_state.atualizar = 0
+    st.session_state['atualizar'] = 0
 
 def atualizar_dados():
-    st.session_state.atualizar += 1
+    st.session_state['atualizar'] += 1
 
 st.button("🔄 Atualizar dados da planilha", on_click=atualizar_dados)
 # ----------------------------------------------------------------------
@@ -78,8 +79,8 @@ if "CLOUD_XLSX_URL" not in st.secrets:
     st.stop()
 
 xlsx_url = st.secrets["CLOUD_XLSX_URL"]
-# O parâmetro st.session_state.atualizar garante atualização quando o botão for clicado
-df_raw = carregar_excel_nuvem(xlsx_url, st.session_state.atualizar)
+# O parâmetro st.session_state['atualizar'] garante atualização quando o botão for clicado
+df_raw = carregar_excel_nuvem(xlsx_url, st.session_state['atualizar'])
 if df_raw is None:
     st.stop()
 
