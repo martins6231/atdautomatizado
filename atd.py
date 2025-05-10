@@ -1,82 +1,78 @@
-# streamlit_britvic_moderno.py
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import io
+import requests
+import tempfile
+import zipfile
 from prophet import Prophet
 import calendar
 from datetime import datetime
 
-st.set_page_config(
-    page_title="Acompanhamento Britvic",
-    page_icon="🔎",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Acompanhamento Britvic", layout="wide")
+st.title("🔎 Acompanhamento de Produção - Britvic")
 
-# ------ CSS Personalizado UI/UX ------
-st.markdown("""
-    <style>
-    body {background-color: #FAFCFE;}
-    .css-1vq4p4l {padding-top: 0rem;}
-    .css-10trblm {padding: 0!important;}
-    .reportview-container .main { background: #f9f9f9; }
-    .sidebar-content { background: #16233A !important; color: #fff; }
-    .css-184tjsw, .css-6qob1r { color: #1A233A !important; }
-    .metric-label, .stCaption {font-size: 1rem!important;}
-    .stMetricValue { font-weight:bold!important; font-size: 1.8rem!important;}
-    .stDownloadButton button {background: #1876D1; color: #fff;}
-    .stDownloadButton button:hover {background: #13518C;}
-    .stButton button {background: #27AE60; color: #fff;}
-    .stButton button:hover {background: #128141;}
-    .stExpanderHeader {font-weight:600;}
-    .egzxvld4 {margin-top: 1.2em;}
-    </style>
-""", unsafe_allow_html=True)
-
-# ------ Barra de Navegação Customizada ------
-st.markdown("""
-<div style="display: flex;justify-content: space-between;align-items:center;padding:12px 0 24px;">
-    <div style="display:flex;align-items:center;">
-        <img src="https://seeklogo.com/images/B/britvic-logo-28560A1B45-seeklogo.com.png"
-            style="height: 46px;margin-right:18px;">
-        <span style="font-size:1.6rem;font-weight:700;color:#16233A;letter-spacing:-1px">Acompanhamento de Produção Britvic</span>
-    </div>
-    <div style="font-size:1.2rem;color:#557; margin-right:18px">
-        <b>Powered by Streamlit • Atualizado {}</b>
-    </div>
-</div>""".format(datetime.now().strftime("%d/%m/%Y %H:%M")), unsafe_allow_html=True)
-
-# ------ Instrução e Upload ------
-st.sidebar.header("⚙️ Configurações", divider="rainbow")
-st.markdown("""<div style="max-width:580px;">
-Carregue sua planilha <b>.xlsx</b> de produção como referência.<br>
-<span style="font-size:0.98em; color:#334; margin-top:6px;display:block">
-Colunas obrigatórias: <strong>categoria, data, caixas_produzidas</strong>
-</span>
-</div>""", unsafe_allow_html=True)
-
-upload = st.sidebar.file_uploader(
-    "Selecione o arquivo Excel (.xlsx)...",
-    type="xlsx",
-    accept_multiple_files=False,
-    help="Apenas arquivos .xlsx"
-)
-
-# ------ Funções Gerais ------
 def nome_mes(numero):
     return calendar.month_abbr[int(numero)]
 
-@st.cache_data
-def carregar_dados(uploaded_file):
+st.sidebar.header("Configurações")
+
+st.markdown("""
+Os dados deste Dashboard são atualizados automaticamente a partir de uma planilha segura em nuvem (Google Drive).
+""")
+
+# ------------------ Download seguro da planilha -----------------
+def is_excel_file(file_path):
     try:
-        df = pd.read_excel(uploaded_file, engine="openpyxl")
-        return df
-    except Exception as e:
-        st.error(f"Erro ao ler a planilha: {e}")
+        with zipfile.ZipFile(file_path):
+            return True
+    except zipfile.BadZipFile:
+        return False
+    except Exception:
+        return False
+
+def convert_gsheet_link(shared_url):
+    """Converte link /edit do Google Sheets para /export?format=xlsx"""
+    if "docs.google.com/spreadsheets" in shared_url:
+        import re
+        match = re.search(r'/d/([a-zA-Z0-9-_]+)', shared_url)
+        if match:
+            sheet_id = match.group(1)
+            return f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx'
+    return shared_url
+
+@st.cache_data
+def carregar_excel_nuvem(link):
+    url = convert_gsheet_link(link)
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
         return None
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        tmp.write(resp.content)
+        tmp.flush()
+        if not is_excel_file(tmp.name):
+            st.error("Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!")
+            return None
+        try:
+            df = pd.read_excel(tmp.name, engine="openpyxl")
+        except Exception as e:
+            st.error(f"Erro abrindo o Excel: {e}")
+            return None
+    return df
+
+if "CLOUD_XLSX_URL" not in st.secrets:
+    st.error("Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.")
+    st.stop()
+
+xlsx_url = st.secrets["CLOUD_XLSX_URL"]
+df_raw = carregar_excel_nuvem(xlsx_url)
+if df_raw is None:
+    st.stop()
+
+# ---------------------------------------------------------------
 
 def tratar_dados(df):
     erros = []
@@ -102,6 +98,13 @@ def tratar_dados(df):
     df_clean = df_clean.drop_duplicates(subset=['categoria','data'], keep='first')
     return df_clean, erros
 
+df, erros = tratar_dados(df_raw)
+with st.expander("Relatório de problemas encontrados", expanded=len(erros)>0):
+    if erros:
+        for e in erros: st.warning(e)
+    else:
+        st.success("Nenhum problema crítico encontrado.")
+
 def selecionar_categoria(df):
     return sorted(df['categoria'].dropna().unique())
 
@@ -124,68 +127,45 @@ def gerar_dataset_modelo(df, categoria=None):
     grupo = df_cat.groupby('data')['caixas_produzidas'].sum().reset_index()
     return grupo.sort_values('data')
 
-# ------ Lógica de upload e tratamento inicial ------
-if upload:
-    df_raw = carregar_dados(upload)
-else:
-    st.info("⬆️ Faça o upload do arquivo para iniciar a visualização.", icon="ℹ️")
-    st.stop()
-
-df, erros = tratar_dados(df_raw)
-with st.expander("🔍 Relatório de problemas identificados", expanded=len(erros) > 0):
-    if erros:
-        for e in erros: st.warning(e)
-    else:
-        st.success("Nenhum problema crítico encontrado.")
-
-# ------ Seleção de parâmetros na sidebar ------
+# -------- SELEÇÃO DE PARÂMETROS --------
 categorias = selecionar_categoria(df)
-categoria_analise = st.sidebar.selectbox("Categoria:", categorias, index=0 if categorias else None)
+categoria_analise = st.sidebar.selectbox("Categoria:", categorias)
+
 anos_disp = sorted(df[df['categoria']==categoria_analise]['data'].dt.year.unique())
-anos_selecionados = st.sidebar.multiselect(
-    "Ano(s):", anos_disp, default=anos_disp,
-    help="Escolha um ou múltiplos anos para análise"
-)
+anos_selecionados = st.sidebar.multiselect("Ano(s):", anos_disp, default=anos_disp)
 
 meses_disp = sorted(df[(df['categoria']==categoria_analise) & (df['data'].dt.year.isin(anos_selecionados))]['data'].dt.month.unique())
 meses_nome = [f"{m:02d} - {calendar.month_name[m]}" for m in meses_disp]
 map_mes = dict(zip(meses_nome, meses_disp))
-meses_selecionados_nome = st.sidebar.multiselect(
-    "Mês(es):", meses_nome, default=meses_nome,
-    help="Selecione um ou mais meses para análise"
-)
+meses_selecionados_nome = st.sidebar.multiselect("Mês(es):", meses_nome, default=meses_nome)
 meses_selecionados = [map_mes[n] for n in meses_selecionados_nome]
 
 df_filtrado = filtrar_periodo(df, categoria_analise, anos_selecionados, meses_selecionados)
-st.subheader(f"📊 Análise: <span style='color:#1876D1'><b>{categoria_analise}</b></span>", unsafe_allow_html=True)
 
+st.subheader(f"Análise para categoria: **{categoria_analise}**")
 if df_filtrado.empty:
     st.error("Não há dados para esse período e categoria.")
     st.stop()
 
-# ------ KPIs ------
+# --------- KPIs ---------
 def exibe_kpis(df, categoria):
     df_cat = df[df['categoria'] == categoria]
     if df_cat.empty:
         st.info("Sem dados para a seleção.")
-        return
+        return None
     df_cat['ano'] = df_cat['data'].dt.year
     kpis = df_cat.groupby('ano')['caixas_produzidas'].agg(['sum','mean','std','count']).reset_index()
-    colunas = st.columns(len(kpis))
+    cols = st.columns(len(kpis))
     for i, (_, row) in enumerate(kpis.iterrows()):
         ano = int(row['ano'])
-        with colunas[i]:
-            st.metric(
-                f"Ano {ano}",
-                f"{int(row['sum']):,} caixas",
-                delta=None
-            )
-            st.caption(f"Média diária: <b>{row['mean']:.0f}</b> &nbsp;&nbsp;|&nbsp;&nbsp; Registros: <b>{row['count']}</b>", unsafe_allow_html=True)
+        with cols[i]:
+            st.metric(f"Ano {ano}", f"{int(row['sum']):,} caixas")
+            st.caption(f"Média diária: {row['mean']:.0f}  \nQuantidade de registros: {row['count']}")
+    return kpis
 
 exibe_kpis(df_filtrado, categoria_analise)
-st.markdown("---")
 
-# ------ Visuais e módulos ------
+# --------- GRÁFICOS ---------
 def plot_tendencia(df, categoria):
     grupo = gerar_dataset_modelo(df, categoria)
     if grupo.empty:
@@ -193,17 +173,12 @@ def plot_tendencia(df, categoria):
         return
     fig = px.line(
         grupo, x='data', y='caixas_produzidas',
-        title='', markers=True,
-        labels={"data": "Data", "caixas_produzidas": "Caixas Produzidas"}
+        title=f"Tendência Diária - {categoria}",
+        markers=True,
+        labels={"data":"Data", "caixas_produzidas":"Caixas Produzidas"}
     )
-    fig.update_traces(line_color="#004DF1", line_width=2, marker=dict(size=7, color="#250E47"))
-    fig.update_layout(
-        template="plotly_white",
-        margin=dict(l=18, r=12, t=20, b=22),
-        legend=dict(orientation='h'),
-        height=350,
-        xaxis=dict(showgrid=False)
-    )
+    fig.update_traces(line_color="#636EFA", line_width=2, marker=dict(size=7, color="darkblue"))
+    fig.update_layout(template="plotly_white", hovermode="x")
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_variacao_mensal(df, categoria):
@@ -213,23 +188,19 @@ def plot_variacao_mensal(df, categoria):
     mensal['var_%'] = mensal['caixas_produzidas'].pct_change() * 100
     fig1 = px.bar(
         mensal, x='mes', y='caixas_produzidas', text_auto=True,
-        title='',
-        labels={"mes": "Mês/Ano", "caixas_produzidas": "Caixas Produzidas"},
-        height=280
+        title=f"Produção Mensal Total - {categoria}",
+        labels={"mes":"Mês/Ano", "caixas_produzidas":"Caixas Produzidas"}
     )
     fig1.update_traces(marker_color="#27AE60")
-    fig1.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=22, b=18))
+    fig1.update_layout(template="plotly_white")
     fig2 = px.line(
         mensal, x='mes', y='var_%', markers=True,
-        title='',
-        labels={"mes": "Mês/Ano", "var_%": "Variação (%)"},
-        height=250
+        title=f"Variação Percentual Mensal (%) - {categoria}",
+        labels={"mes":"Mês/Ano", "var_%":"Variação (%)"}
     )
-    fig2.update_traces(line_color="#F39C12", marker=dict(size=7))
-    fig2.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=12))
-    st.columns([1,2])[0].markdown("#### 📈 Produção Mensal")
+    fig2.update_traces(line_color="#E67E22", marker=dict(size=7))
+    fig2.update_layout(template="plotly_white")
     st.plotly_chart(fig1, use_container_width=True)
-    st.columns([1,2])[0].markdown("#### 📉 Variação Percentual")
     st.plotly_chart(fig2, use_container_width=True)
 
 def plot_sazonalidade(df, categoria):
@@ -240,7 +211,7 @@ def plot_sazonalidade(df, categoria):
     fig = px.box(
         agrup, x='mes', y='caixas_produzidas', color=agrup['ano'].astype(str),
         points='all', notched=True,
-        title='', height=340,
+        title=f"Sazonalidade Mensal - {categoria}",
         labels={'mes':"Mês", "caixas_produzidas":"Produção"},
         hover_data=["ano"]
     )
@@ -251,10 +222,8 @@ def plot_sazonalidade(df, categoria):
             ticktext=[nome_mes(m) for m in range(1,13)]
         ),
         template="plotly_white",
-        legend_title="Ano",
-        margin=dict(l=14, r=14, t=10, b=16)
+        legend_title="Ano"
     )
-    st.markdown("#### 📦 Sazonalidade Mensal")
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_comparativo_ano_mes(df, categoria):
@@ -275,15 +244,13 @@ def plot_comparativo_ano_mes(df, categoria):
         ))
     fig.update_layout(
         barmode='group',
-        title='',
-        xaxis_title="Mês", yaxis_title="Caixas Produzidas",
+        title=f"Produção Mensal {categoria} - Comparativo por Ano",
+        xaxis_title="Mês",
+        yaxis_title="Caixas Produzidas",
         legend_title="Ano",
         hovermode="x unified",
-        template="plotly_white",
-        margin=dict(l=12, r=12, t=12, b=18),
-        height=300
+        template="plotly_white"
     )
-    st.markdown("#### 📅 Comparativo Ano a Ano")
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_comparativo_acumulado(df, categoria):
@@ -294,8 +261,7 @@ def plot_comparativo_acumulado(df, categoria):
         res, x='mes', y='acumulado', color=res['ano'].astype(str),
         markers=True,
         labels={'mes':"Mês", 'acumulado':"Caixas Acumuladas", 'ano':'Ano'},
-        title='',
-        height=260
+        title=f"Produção Acumulada Mês a Mês - {categoria}"
     )
     fig.update_traces(mode="lines+markers")
     fig.update_layout(
@@ -306,10 +272,8 @@ def plot_comparativo_acumulado(df, categoria):
             ticktext=[nome_mes(m) for m in range(1,13)]
         ),
         hovermode="x unified",
-        template="plotly_white",
-        margin=dict(l=10, r=10, t=14, b=12)
+        template="plotly_white"
     )
-    st.markdown("#### 🔢 Produção Acumulada")
     st.plotly_chart(fig, use_container_width=True)
 
 def rodar_previsao_prophet(df, categoria, meses_futuro=6):
@@ -338,15 +302,9 @@ def plot_previsao(dados_hist, previsao, categoria):
                              line=dict(dash='dash', color='#AED6F1'), name='Limite Superior', opacity=0.3))
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_lower'],
                              line=dict(dash='dash', color='#AED6F1'), name='Limite Inferior', opacity=0.3))
-    fig.update_layout(
-        title='',
-        xaxis_title="Data", yaxis_title="Caixas Produzidas",
-        template="plotly_white",
-        hovermode="x unified",
-        margin=dict(l=18, r=18, t=10, b=18),
-        height=320
-    )
-    st.markdown("#### 🤖 Previsão de Produção (6 meses)")
+    fig.update_layout(title=f"Previsão de Produção - {categoria}",
+                     xaxis_title="Data", yaxis_title="Caixas Produzidas",
+                     template="plotly_white", hovermode="x unified")
     st.plotly_chart(fig, use_container_width=True)
 
 def gerar_insights(df, categoria):
@@ -370,7 +328,7 @@ def gerar_insights(df, categoria):
     mean = grupo['caixas_produzidas'].mean()
     if mean > 0 and std/mean > 0.5:
         tendencias.append("Alta variabilidade diária. Sugerido investigar causas das flutuações.")
-    with st.expander("💡 Insights Automáticos", expanded=True):
+    with st.expander("Insights Automáticos", expanded=True):
         for t in tendencias:
             st.info(t)
         if not tendencias:
@@ -387,27 +345,19 @@ def exportar_consolidado(df, previsao, categoria):
     nome_arq = f'consolidado_{categoria.lower()}.xlsx'
     return base_export, nome_arq
 
-# ------ Dashboards ------
-with st.container():
-    plot_tendencia(df_filtrado, categoria_analise)
-    st.markdown("<br>", unsafe_allow_html=True)
-    plot_variacao_mensal(df_filtrado, categoria_analise)
-    st.markdown("<br>", unsafe_allow_html=True)
-    plot_sazonalidade(df_filtrado, categoria_analise)
-
-with st.container():
-    if len(set(df_filtrado['data'].dt.year)) > 1:
-        with st.columns(2)[0]:
-            plot_comparativo_ano_mes(df_filtrado, categoria_analise)
-        with st.columns(2)[1]:
-            plot_comparativo_acumulado(df_filtrado, categoria_analise)
-
+# -- Execução dos gráficos e análises --
+plot_tendencia(df_filtrado, categoria_analise)
+plot_variacao_mensal(df_filtrado, categoria_analise)
+plot_sazonalidade(df_filtrado, categoria_analise)
+if len(set(df_filtrado['data'].dt.year)) > 1:
+    plot_comparativo_ano_mes(df_filtrado, categoria_analise)
+    plot_comparativo_acumulado(df_filtrado, categoria_analise)
 dados_hist, previsao, modelo_prophet = rodar_previsao_prophet(df_filtrado, categoria_analise, meses_futuro=6)
 plot_previsao(dados_hist, previsao, categoria_analise)
 gerar_insights(df_filtrado, categoria_analise)
 
-# ------ Exportação ------
-with st.expander("🗂️ Exportação de Consolidado"):
+# Exportação de consolidado
+with st.expander("Exportação"):
     if st.button("Exportar consolidado com previsão (.xlsx)"):
         base_export, nome_arq = exportar_consolidado(df_filtrado, previsao, categoria_analise)
         buffer = io.BytesIO()
