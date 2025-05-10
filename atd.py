@@ -368,4 +368,21 @@ with st.expander("Exportação"):
             data=buffer,
             file_name=nome_arq,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        # Botão para atualizar os dados
+if 'atualizar' not in st.session_state:
+    st.session_state.atualizar = 0
+
+def atualizar_dados():
+    st.session_state.atualizar += 1
+
+st.button("🔄 Atualizar dados da planilha", on_click=atualizar_dados)
+
+@st.cache_data
+def carregar_excel_nuvem(link, versao_cache):
+    url = convert_gsheet_link(link)
+    resp = requests.get(url)
+    # ...restante igual...
+
+xlsx_url = st.secrets["CLOUD_XLSX_URL"]
+df_raw = carregar_excel_nuvem(xlsx_url, st.session_state.atualizar)
+)
