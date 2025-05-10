@@ -23,6 +23,16 @@ st.markdown("""
 Os dados deste Dashboard são atualizados automaticamente a partir de uma planilha segura em nuvem (Google Drive).
 """)
 
+# ----------- Botão de atualização manual do cache (solução do problema) -----------
+if 'atualizar' not in st.session_state:
+    st.session_state.atualizar = 0
+
+def atualizar_dados():
+    st.session_state.atualizar += 1
+
+st.button("🔄 Atualizar dados da planilha", on_click=atualizar_dados)
+# ----------------------------------------------------------------------
+
 # ------------------ Download seguro da planilha -----------------
 def is_excel_file(file_path):
     try:
@@ -44,7 +54,7 @@ def convert_gsheet_link(shared_url):
     return shared_url
 
 @st.cache_data
-def carregar_excel_nuvem(link):
+def carregar_excel_nuvem(link, versao_cache):
     url = convert_gsheet_link(link)
     resp = requests.get(url)
     if resp.status_code != 200:
@@ -68,7 +78,8 @@ if "CLOUD_XLSX_URL" not in st.secrets:
     st.stop()
 
 xlsx_url = st.secrets["CLOUD_XLSX_URL"]
-df_raw = carregar_excel_nuvem(xlsx_url)
+# O parâmetro st.session_state.atualizar garante atualização quando o botão for clicado
+df_raw = carregar_excel_nuvem(xlsx_url, st.session_state.atualizar)
 if df_raw is None:
     st.stop()
 
@@ -368,21 +379,4 @@ with st.expander("Exportação"):
             data=buffer,
             file_name=nome_arq,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        # Botão para atualizar os dados
-if 'atualizar' not in st.session_state:
-    st.session_state.atualizar = 0
-
-def atualizar_dados():
-    st.session_state.atualizar += 1
-
-st.button("🔄 Atualizar dados da planilha", on_click=atualizar_dados)
-
-@st.cache_data
-def carregar_excel_nuvem(link, versao_cache):
-    url = convert_gsheet_link(link)
-    resp = requests.get(url)
-    # ...restante igual...
-
-xlsx_url = st.secrets["CLOUD_XLSX_URL"]
-df_raw = carregar_excel_nuvem(xlsx_url, st.session_state.atualizar)
-)
+        )
