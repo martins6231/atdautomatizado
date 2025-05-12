@@ -9,7 +9,6 @@ import tempfile
 import zipfile
 from prophet import Prophet
 import calendar
-import datetime
 
 st.set_page_config(
     page_title="Dashboard de Produção - Britvic",
@@ -17,7 +16,7 @@ st.set_page_config(
     page_icon="🧃"
 )
 
-# Suporte Bilíngue (Português e Inglês)
+# ----------- Suporte Bilíngue -----------
 LANGS = {
     "pt": "Português (Brasil)",
     "en": "English"
@@ -82,6 +81,7 @@ def t(msg_key, **kwargs):
             "year_lbl": "Ano",
             "accum_boxes": "Caixas Acumuladas",
             "forecast_boxes": "Previsão Caixas",
+            "select_date_range": "Selecione o intervalo de datas:",
         },
         "en": {
             "dashboard_title": "Production Dashboard - Britvic",
@@ -137,6 +137,7 @@ def t(msg_key, **kwargs):
             "year_lbl": "Year",
             "accum_boxes": "Accum. Boxes",
             "forecast_boxes": "Forecasted Boxes",
+            "select_date_range": "Select date range:",
         }
     }
     base = TRANSLATE[idioma].get(msg_key, msg_key)
@@ -144,60 +145,61 @@ def t(msg_key, **kwargs):
         base = base.format(**kwargs)
     return base
 
-# Layout e Cor padrão
+# -------------- Layout e Cor padrão -------------
 BRITVIC_PRIMARY = "#003057"
 BRITVIC_ACCENT = "#27AE60"
 BRITVIC_BG = "#F4FFF6"
 
-# CSS Customizado
+# ---------- CSS Customizado ----------
 st.markdown(f"""
-<style>
-    .stApp {{
+    <style>
+        .stApp {{
+            background-color: {BRITVIC_BG};
+        }}
+        .center {{
+            text-align: center;
+        }}
+        .britvic-title {{
+            font-size: 2.6rem;
+            font-weight: bold;
+            color: {BRITVIC_PRIMARY};
+            text-align: center;
+            margin-bottom: 0.3em;
+        }}
+        .subtitle {{
+            text-align: center;
+            color: {BRITVIC_PRIMARY};
+            font-size: 1.0rem;
+            margin-bottom: 1em;
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+# ----------- Topo/logomarca ------------
+st.markdown(f"""
+    <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         background-color: {BRITVIC_BG};
-    }}
-    .center {{
-        text-align: center;
-    }}
-    .britvic-title {{
-        font-size: 2.6rem;
-        font-weight: bold;
-        color: {BRITVIC_PRIMARY};
-        text-align: center;
-        margin-bottom: 0.3em;
-    }}
-    .subtitle {{
-        text-align: center;
-        color: {BRITVIC_PRIMARY};
-        font-size: 1.0rem;
-        margin-bottom: 1em;
-    }}
-</style>
+        padding: 10px 0 20px 0;
+        margin-bottom: 20px;"
+    >
+        <img src="https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
+        <h1 style="
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: {BRITVIC_PRIMARY};
+            margin: 0;"
+        >
+            {t("main_title")}
+        </h1>
+    </div>
 """, unsafe_allow_html=True)
 
-# Topo/logomarca
-st.markdown(f"""
-<div style="
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     justify-content: center;
-     background-color: {BRITVIC_BG};
-     padding: 10px 0 20px 0;
-     margin-bottom: 20px;"
- >
-    <img src="https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
-    <h1 style="
-         font-size: 2.2rem;
-         font-weight: bold;
-         color: {BRITVIC_PRIMARY};
-         margin: 0;"
-     >
-        {t("main_title")}
-    </h1>
-</div>
-""", unsafe_allow_html=True)
+# ---------- Funções auxiliares ------------
 
-# Funções auxiliares
 def nome_mes(numero):
     return calendar.month_abbr[int(numero)] if idioma == "pt" else calendar.month_name[int(numero)][:3]
 
@@ -302,7 +304,7 @@ def gerar_dataset_modelo(df, categoria=None):
     grupo = df_cat.groupby('data')['caixas_produzidas'].sum().reset_index()
     return grupo.sort_values('data')
 
-# Parâmetros / Filtros
+# ----------- Parâmetros / Filtros -----------
 categorias = selecionar_categoria(df)
 anos_disp = sorted(df['data'].dt.year.drop_duplicates())
 meses_disp = sorted(df['data'].dt.month.drop_duplicates())
@@ -321,28 +323,24 @@ if "filtros" not in st.session_state:
     }
 
 with st.sidebar:
-    st.markdown("### Filtros")
     categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
     anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
     meses_selecionados_nome = st.multiselect(
-        t("month"),
-        meses_nome,
-        default=default_meses_nome,
+        t("month"), 
+        meses_nome, 
+        default=default_meses_nome, 
         key="mesbox"
     )
-# Garantir que as datas inicial e final sejam do tipo datetime
-    data_inicial, data_final = [pd.to_datetime(d).date() for d in st.date_input(
-    "Selecione o intervalo de datas:",
-    [df['data'].min(), df['data'].max()],
-    key="date_range",
-    max_value=df['data'].max(),
-    min_value=df['data'].min()
-)]
+    
+    # Novo filtro de intervalo de datas
+    data_inicial, data_final = st.date_input(
+        t("select_date_range"),
+        [df['data'].min().date(), df['data'].max().date()],
+        min_value=df['data'].min().date(),
+        max_value=df['data'].max().date()
+    )
+    df = df[(df['data'] >= pd.to_datetime(data_inicial)) & (df['data'] <= pd.to_datetime(data_final))]
 
-df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
-
-# Converter para datetime para comparação
-df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
 st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
 st.session_state["filtros"]["anos"] = st.session_state["anobox"]
 st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
@@ -350,9 +348,8 @@ st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
 meses_selecionados = [map_mes[n] for n in st.session_state["filtros"]["meses_nome"] if n in map_mes]
 
 df_filtrado = filtrar_periodo(df, st.session_state["filtros"]["categoria"], st.session_state["filtros"]["anos"], meses_selecionados)
-df_filtrado = df_filtrado[(df_filtrado['data'] >= data_inicial) & (df_filtrado['data'] <= data_final)]
 
-# Subtítulo
+# --------- Subtítulo ---------
 st.markdown(
     f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=st.session_state['filtros']['categoria'])}</h3>",
     unsafe_allow_html=True
@@ -361,7 +358,7 @@ if df_filtrado.empty:
     st.error(t("empty_data_for_period"))
     st.stop()
 
-# KPIs / Métricas
+# --------- KPIs / Métricas --------
 def exibe_kpis(df, categoria):
     df_cat = df[df['categoria'] == categoria]
     if df_cat.empty:
@@ -379,24 +376,24 @@ def exibe_kpis(df, categoria):
         st.markdown(
             f"""
             <div style="
-                         background: #e8f8ee;
-                         border-radius: 18px;
-                         box-shadow: 0 6px 28px 0 rgba(0, 48, 87, 0.13);
-                         padding: 28px 38px 22px 38px;
-                         min-width: 220px;
-                         margin-bottom: 13px;
-                         text-align: center;
-                     ">
-            <div style="font-weight: 600; color: {BRITVIC_PRIMARY}; font-size: 1.12em; margin-bottom:5px;">
-            {t("kpi_year", ano=ano)}
-            </div>
-            <div style="color: {BRITVIC_ACCENT}; font-size:2.1em; font-weight:bold; margin-bottom:7px;">
-            {t("kpi_sum", qtd=int(row['sum']))}
-            </div>
-            <div style="font-size: 1.08em; color: {BRITVIC_PRIMARY}; margin-bottom:2px;">
-            {t('kpi_daily_avg', media=row["mean"], accent=BRITVIC_ACCENT)}
-            </div>
-            <div style="font-size: 1em; color: #666;">{t('kpi_records', count=row['count'])}</div>
+                background: #e8f8ee;
+                border-radius: 18px;
+                box-shadow: 0 6px 28px 0 rgba(0, 48, 87, 0.13);
+                padding: 28px 38px 22px 38px;
+                min-width: 220px;
+                margin-bottom: 13px;
+                text-align: center;
+            ">
+                <div style="font-weight: 600; color: {BRITVIC_PRIMARY}; font-size: 1.12em; margin-bottom:5px;">
+                    {t("kpi_year", ano=ano)}
+                </div>
+                <div style="color: {BRITVIC_ACCENT}; font-size:2.1em; font-weight:bold; margin-bottom:7px;">
+                    {t("kpi_sum", qtd=int(row['sum']))}
+                </div>
+                <div style="font-size: 1.08em; color: {BRITVIC_PRIMARY}; margin-bottom:2px;">
+                    {t('kpi_daily_avg', media=row["mean"], accent=BRITVIC_ACCENT)}
+                </div>
+                <div style="font-size: 1em; color: #666;">{t('kpi_records', count=row['count'])}</div>
             </div>
             """, unsafe_allow_html=True
         )
@@ -405,7 +402,8 @@ def exibe_kpis(df, categoria):
 
 exibe_kpis(df_filtrado, st.session_state["filtros"]["categoria"])
 
-# GRÁFICOS
+# --------- GRÁFICOS ---------
+
 def plot_tendencia(df, categoria):
     grupo = gerar_dataset_modelo(df, categoria)
     if grupo.empty:
@@ -415,14 +413,14 @@ def plot_tendencia(df, categoria):
         grupo, x='data', y='caixas_produzidas',
         title=t("daily_trend", cat=categoria),
         labels={
-            "data": t("data"),
+            "data": t("data"), 
             "caixas_produzidas": t("produced_boxes")
         },
         text_auto=True
     )
     fig.update_traces(marker_color=BRITVIC_ACCENT)
     fig.update_layout(
-        template="plotly_white",
+        template="plotly_white", 
         hovermode="x",
         title_font_color=BRITVIC_PRIMARY,
         plot_bgcolor=BRITVIC_BG
@@ -560,10 +558,10 @@ def plot_previsao(dados_hist, previsao, categoria):
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_lower'],
                              line=dict(dash='dash', color='#AED6F1'), name='Lower', opacity=0.3))
     fig.update_layout(title=t("forecast", cat=categoria),
-                      xaxis_title=t("data"), yaxis_title=t("produced_boxes"),
-                      template="plotly_white", hovermode="x unified",
-                      title_font_color=BRITVIC_PRIMARY,
-                      plot_bgcolor=BRITVIC_BG)
+                     xaxis_title=t("data"), yaxis_title=t("produced_boxes"),
+                     template="plotly_white", hovermode="x unified",
+                     title_font_color=BRITVIC_PRIMARY,
+                     plot_bgcolor=BRITVIC_BG)
     st.plotly_chart(fig, use_container_width=True)
 
 def gerar_insights(df, categoria):
@@ -604,7 +602,7 @@ def exportar_consolidado(df, previsao, categoria):
     nome_arq = f'consolidado_{categoria.lower()}.xlsx'
     return base_export, nome_arq
 
-# Execução dos gráficos e análises
+# ---- Execução dos gráficos e análises ----
 plot_tendencia(df_filtrado, st.session_state["filtros"]["categoria"])
 plot_variacao_mensal(df_filtrado, st.session_state["filtros"]["categoria"])
 plot_sazonalidade(df_filtrado, st.session_state["filtros"]["categoria"])
@@ -615,7 +613,7 @@ dados_hist, previsao, modelo_prophet = rodar_previsao_prophet(df_filtrado, st.se
 plot_previsao(dados_hist, previsao, st.session_state["filtros"]["categoria"])
 gerar_insights(df_filtrado, st.session_state["filtros"]["categoria"])
 
-# EXPORTAÇÃO
+# --------- EXPORTAÇÃO ---------
 with st.expander(t("export")):
     if st.button(t("export_with_fc"), help=t("export_with_fc")):
         base_export, nome_arq = exportar_consolidado(df_filtrado, previsao, st.session_state["filtros"]["categoria"])
