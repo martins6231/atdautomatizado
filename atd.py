@@ -11,16 +11,102 @@ from prophet import Prophet
 import calendar
 
 # Cores Britvic
-BRITVIC_PRIMARY = "#003057"  # Azul Britvic
-BRITVIC_ACCENT = "#27AE60"   # Verde Britvic
-BRITVIC_BG = "#F4FFF6"       # Fundo suave esverdeado
+BRITVIC_PRIMARY = "#003057"
+BRITVIC_ACCENT = "#27AE60"
+BRITVIC_BG = "#F4FFF6"
+
+# --------- Dicionário de Tradução -----------
+TRANSLATIONS = {
+    "Dashboard de Produção": {"pt": "Dashboard de Produção", "en": "Production Dashboard"},
+    "Os dados deste Dashboard são atualizados automaticamente a cada <b style="color:#27AE60">10 minutos</b> a partir de uma planilha segura em nuvem (Google Drive).":
+        {"pt": "Os dados deste Dashboard são atualizados automaticamente a cada <b style="color:#27AE60">10 minutos</b> a partir de uma planilha segura em nuvem (Google Drive).",
+         "en": "This dashboard data is automatically updated every <b style="color:#27AE60">10 minutes</b> from a secure cloud spreadsheet (Google Drive)."},
+    "Análise para categoria:": {"pt": "Análise para categoria:", "en": "Analysis for category:"},
+    "Não há dados para esse período e categoria.": {"pt": "Não há dados para esse período e categoria.", "en": "No data for this period and category."},
+    "Média diária:": {"pt": "Média diária:", "en": "Daily average:"},
+    "Registros:": {"pt": "Registros:", "en": "Records:"},
+    "Nenhum problema crítico encontrado.": {"pt": "Nenhum problema crítico encontrado.", "en": "No critical problems found."},
+    "Coluna obrigatória ausente:": {"pt": "Coluna obrigatória ausente:", "en": "Missing required column:"},
+    "Erro ao converter coluna 'data'.": {"pt": "Erro ao converter coluna 'data'.", "en": "Error converting 'data' column."},
+    "Coluna '{col}' com {qtd} valores ausentes.": {"pt": "Coluna '{col}' com {qtd} valores ausentes.", "en": "Column '{col}' with {qtd} missing values."},
+    "{negativos} registros negativos em 'caixas_produzidas'.": {"pt": "{negativos} registros negativos em 'caixas_produzidas'.", "en": "{negativos} negative entries in 'caixas_produzidas'."},
+    "Relatório de problemas encontrados": {"pt": "Relatório de problemas encontrados", "en": "Issues detected report"},
+    "🏷️ Categoria:": {"pt": "🏷️ Categoria:", "en": "🏷️ Category:"},
+    "📅 Ano(s):": {"pt": "📅 Ano(s):", "en": "📅 Year(s):"},
+    "📆 Mês(es):": {"pt": "📆 Mês(es):", "en": "📆 Month(s):"},
+    "Tendência Diária": {"pt": "Tendência Diária", "en": "Daily Trend"},
+    "Caixas Produzidas": {"pt": "Caixas Produzidas", "en": "Produced Boxes"},
+    "Data": {"pt": "Data", "en": "Date"},
+    "Sem dados para tendência.": {"pt": "Sem dados para tendência.", "en": "No data for trend."},
+
+    "Produção Mensal Total": {"pt": "Produção Mensal Total", "en": "Monthly Production Total"},
+    "Mês/Ano": {"pt": "Mês/Ano", "en": "Month/Year"},
+    "Variação Percentual Mensal (%)": {"pt": "Variação Percentual Mensal (%)", "en": "Monthly Percentage Variation (%)"},
+    "Variação (%)": {"pt": "Variação (%)", "en": "Variation (%)"},
+
+    "Sazonalidade Mensal": {"pt": "Sazonalidade Mensal", "en": "Monthly Seasonality"},
+    "Mês": {"pt": "Mês", "en": "Month"},
+    "Produção": {"pt": "Produção", "en": "Production"},
+    "Ano": {"pt": "Ano", "en": "Year"},
+    "Sem dados para sazonalidade.": {"pt": "Sem dados para sazonalidade.", "en": "No data for seasonality."},
+
+    "Produção Mensal": {"pt": "Produção Mensal", "en": "Monthly Production"},
+    "Comparativo por Ano": {"pt": "Comparativo por Ano", "en": "Yearly Comparison"},
+    "Produção Acumulada Mês a Mês": {"pt": "Produção Acumulada Mês a Mês", "en": "Cumulative Production Month by Month"},
+    "Caixas Acumuladas": {"pt": "Caixas Acumuladas", "en": "Cumulative Boxes"},
+    "Limite Superior": {"pt": "Limite Superior", "en": "Upper Limit"},
+    "Limite Inferior": {"pt": "Limite Inferior", "en": "Lower Limit"},
+    "Previsão de Produção": {"pt": "Previsão de Produção", "en": "Production Forecast"},
+    "Previsão": {"pt": "Previsão", "en": "Forecast"},
+    "Histórico": {"pt": "Histórico", "en": "Historical"},
+    "Sem previsão disponível.": {"pt": "Sem previsão disponível.", "en": "No forecast available."},
+
+    "Insights Automáticos": {"pt": "Insights Automáticos", "en": "Automatic Insights"},
+    "Crescimento recente na produção detectado nos últimos meses.": {"pt": "Crescimento recente na produção detectado nos últimos meses.", "en": "Recent growth in production detected over the last months."},
+    "Queda recente na produção detectada nos últimos meses.": {"pt": "Queda recente na produção detectada nos últimos meses.", "en": "Recent drop in production detected over the last months."},
+    "Foram encontrados {qtd} dias atípicos de produção (possíveis outliers).": {"pt": "Foram encontrados {qtd} dias atípicos de produção (possíveis outliers).", "en": "Found {qtd} atypical days of production (possible outliers)."},
+    "Alta variabilidade diária. Sugerido investigar causas das flutuações.": {"pt": "Alta variabilidade diária. Sugerido investigar causas das flutuações.", "en": "High daily variability. Suggested to investigate the causes for these fluctuations."},
+    "Nenhum padrão preocupante encontrado para esta categoria.": {"pt": "Nenhum padrão preocupante encontrado para esta categoria.", "en": "No concerning pattern found for this category."},
+
+    "Exportação": {"pt": "Exportação", "en": "Export"},
+    "⬇️ Exportar consolidado com previsão (.xlsx)": {"pt": "⬇️ Exportar consolidado com previsão (.xlsx)", "en": "⬇️ Export consolidated with forecast (.xlsx)"},
+    "Clique para exportar os dados atuais filtrados para Excel": {"pt": "Clique para exportar os dados atuais filtrados para Excel", "en": "Click to export current filtered data to Excel"},
+    "Download arquivo Excel ⬇️": {"pt": "Download arquivo Excel ⬇️", "en": "Download Excel file ⬇️"},
+    "Sem previsão para exportar.": {"pt": "Sem previsão para exportar.", "en": "No forecast to export."},
+
+    "Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.": {
+        "pt": "Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.",
+        "en": "Add CLOUD_XLSX_URL to your .streamlit/secrets.toml and share the spreadsheet for 'anyone with the link'."
+    },
+    "Erro ao baixar planilha. Status code: {status}": {"pt": "Erro ao baixar planilha. Status code: {status}", "en": "Error downloading spreadsheet. Status code: {status}"},
+    "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!": {"pt": "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!", "en": "Downloaded file is not a valid Excel. Confirm if the link is public/correct!"},
+    "Erro ao abrir o Excel: {erro}": {"pt": "Erro ao abrir o Excel: {erro}", "en": "Error opening Excel file: {erro}"},
+    "Sem dados para a seleção.": {"pt": "Sem dados para a seleção.", "en": "No data for the selection."}
+}
+
+# ----------- Função de Tradução -------------
+def get_lang():
+    return "pt" if st.session_state.get("lang", "Português") == "Português" else "en"
+
+def t(key, **kwargs):
+    lang = get_lang()
+    if key in TRANSLATIONS:
+        s = TRANSLATIONS[key][lang]
+        if kwargs:
+            return s.format(**kwargs)
+        return s
+    return key
 
 # Configuração da página
 st.set_page_config(
-    page_title="Dashboard de Produção - Britvic",
+    page_title=t("Dashboard de Produção"),
     layout="wide",
-    page_icon="🧃",  # Ícone do navegador alterado para copo de suco
+    page_icon="🧃",
 )
+
+# ----------- Seletor de Idioma -------------
+with st.sidebar:
+    lang = st.selectbox("🌐 Idioma / Language:", ["Português", "English"], key="lang")
 
 # --------- CSS para estilização ---------
 st.markdown(f"""
@@ -48,7 +134,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --------- TOPO (Logo e Título) ---------
-# Centralizar logo e título em um único alinhamento (NOVO FRAGMENTO)
 st.markdown(f"""
     <div style="
         display: flex;
@@ -59,20 +144,32 @@ st.markdown(f"""
         padding: 10px 0 20px 0;
         margin-bottom: 20px;"
     >
-        <img src="https://raw.githubusercontent.com/martins6231/atdautomatizado/main/calsberg_britvic.jpg" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
+        <img src="https://raw.githubusercontent.com/martins6231/atdautomatizado/8a52d1f013f2cae36b078e7341ef5d3bd8ee26b3/calsberg_britvic.jpg" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
         <h1 style="
             font-size: 2.2rem;
             font-weight: bold;
             color: {BRITVIC_PRIMARY};
             margin: 0;"
         >
-            Dashboard de Produção
+            {t('Dashboard de Produção')}
         </h1>
     </div>
 """, unsafe_allow_html=True)
 
+st.markdown(f"""
+    <div class='subtitle'>
+    {t('Os dados deste Dashboard são atualizados automaticamente a cada <b style="color:#27AE60">10 minutos</b> a partir de uma planilha segura em nuvem (Google Drive).')}
+    </div>
+""", unsafe_allow_html=True)
+st.markdown("""<hr style="margin-bottom: 20px;">""", unsafe_allow_html=True)
+
 def nome_mes(numero):
-    return calendar.month_abbr[int(numero)]
+    lang = get_lang()
+    if lang == "pt":
+        meses = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    else:
+        meses = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return meses[int(numero)]
 
 # ------------------ Download seguro da planilha -----------------
 def is_excel_file(file_path):
@@ -98,23 +195,23 @@ def carregar_excel_nuvem(link):
     url = convert_gsheet_link(link)
     resp = requests.get(url)
     if resp.status_code != 200:
-        st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
+        st.error(t("Erro ao baixar planilha. Status code: {status}", status=resp.status_code))
         return None
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         tmp.write(resp.content)
         tmp.flush()
         if not is_excel_file(tmp.name):
-            st.error("Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!")
+            st.error(t("Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!"))
             return None
         try:
             df = pd.read_excel(tmp.name, engine="openpyxl")
         except Exception as e:
-            st.error(f"Erro ao abrir o Excel: {e}")
+            st.error(t("Erro ao abrir o Excel: {erro}", erro=e))
             return None
     return df
 
 if "CLOUD_XLSX_URL" not in st.secrets:
-    st.error("Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.")
+    st.error(t("Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'."))
     st.stop()
 
 xlsx_url = st.secrets["CLOUD_XLSX_URL"]
@@ -130,18 +227,18 @@ def tratar_dados(df):
     obrigatorias = ['categoria', 'data', 'caixas_produzidas']
     for col in obrigatorias:
         if col not in df.columns:
-            erros.append(f"Coluna obrigatória ausente: {col}")
+            erros.append(t("Coluna obrigatória ausente:") + f" {col}")
     try:
         df['data'] = pd.to_datetime(df['data'])
     except Exception:
-        erros.append("Erro ao converter coluna 'data'.")
+        erros.append(t("Erro ao converter coluna 'data'."))
     na_count = df.isna().sum()
     for col, qtd in na_count.items():
         if qtd > 0:
-            erros.append(f"Coluna '{col}' com {qtd} valores ausentes.")
+            erros.append(t("Coluna '{col}' com {qtd} valores ausentes.", col=col, qtd=qtd))
     negativos = (df['caixas_produzidas'] < 0).sum()
     if negativos > 0:
-        erros.append(f"{negativos} registros negativos em 'caixas_produzidas'.")
+        erros.append(t("{negativos} registros negativos em 'caixas_produzidas'.", negativos=negativos))
     df_clean = df.dropna(subset=['categoria', 'data', 'caixas_produzidas']).copy()
     df_clean['caixas_produzidas'] = pd.to_numeric(df_clean['caixas_produzidas'], errors='coerce').fillna(0).astype(int)
     df_clean = df_clean[df_clean['caixas_produzidas'] >= 0]
@@ -149,12 +246,12 @@ def tratar_dados(df):
     return df_clean, erros
 
 df, erros = tratar_dados(df_raw)
-with st.expander("Relatório de problemas encontrados", expanded=len(erros) > 0):
+with st.expander(t("Relatório de problemas encontrados"), expanded=len(erros) > 0):
     if erros:
         for e in erros:
             st.warning(e)
     else:
-        st.success("Nenhum problema crítico encontrado.")
+        st.success(t("Nenhum problema crítico encontrado."))
 
 def selecionar_categoria(df):
     return sorted(df['categoria'].dropna().unique())
@@ -183,7 +280,7 @@ def gerar_dataset_modelo(df, categoria=None):
 categorias = selecionar_categoria(df)
 anos_disp = sorted(df['data'].dt.year.drop_duplicates())
 meses_disp = sorted(df['data'].dt.month.drop_duplicates())
-meses_nome = [f"{m:02d} - {calendar.month_name[m]}" for m in meses_disp]
+meses_nome = [f"{m:02d} - {nome_mes(m)}" for m in meses_disp]
 map_mes = dict(zip(meses_nome, meses_disp))
 
 default_categoria = categorias[0] if categorias else None
@@ -198,9 +295,9 @@ if "filtros" not in st.session_state:
     }
 
 with st.sidebar:
-    categoria_analise = st.selectbox("🏷️ Categoria:", categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
-    anos_selecionados = st.multiselect("📅 Ano(s):", anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
-    meses_selecionados_nome = st.multiselect("📆 Mês(es):", meses_nome, default=st.session_state["filtros"]["meses_nome"], key="mesbox")
+    categoria_analise = st.selectbox(t("🏷️ Categoria:"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
+    anos_selecionados = st.multiselect(t("📅 Ano(s):"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
+    meses_selecionados_nome = st.multiselect(t("📆 Mês(es):"), meses_nome, default=st.session_state["filtros"]["meses_nome"], key="mesbox")
 
 # Após interação, atualizar session_state também
 st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
@@ -213,23 +310,21 @@ df_filtrado = filtrar_periodo(df, st.session_state["filtros"]["categoria"], st.s
 
 # --------- SUBTÍTULO PRINCIPAL ---------
 st.markdown(
-    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>Análise para categoria: <b>{st.session_state['filtros']['categoria']}</b></h3>",
+    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('Análise para categoria:')} <b>{st.session_state['filtros']['categoria']}</b></h3>",
     unsafe_allow_html=True
 )
 if df_filtrado.empty:
-    st.error("Não há dados para esse período e categoria.")
+    st.error(t("Não há dados para esse período e categoria."))
     st.stop()
 
-# --------- MÉTRICAS / KPIs Britvic (centralizadas, atrativas, institucional) ---------
+# --------- MÉTRICAS / KPIs ---------
 def exibe_kpis(df, categoria):
     df_cat = df[df['categoria'] == categoria]
     if df_cat.empty:
-        st.info("Sem dados para a seleção.")
+        st.info(t("Sem dados para a seleção."))
         return None
     df_cat['ano'] = df_cat['data'].dt.year
     kpis = df_cat.groupby('ano')['caixas_produzidas'].agg(['sum', 'mean', 'std', 'count']).reset_index()
-    
-    # Cards centrais com identidade Britvic
     st.markdown(
         f"""
         <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 18px;">
@@ -246,18 +341,18 @@ def exibe_kpis(df, categoria):
                 padding: 28px 38px 22px 38px;
                 min-width: 220px;
                 margin-bottom: 13px;
-                text-align: center;
-            ">
+                text-align: center;"
+            >
                 <div style="font-weight: 600; color: {BRITVIC_PRIMARY}; font-size: 1.12em; margin-bottom:5px;">
-                    📦 Ano {ano}
+                    📦 {t("Ano") if get_lang() == "pt" else "Year"} {ano}
                 </div>
                 <div style="color: {BRITVIC_ACCENT}; font-size:2.1em; font-weight:bold; margin-bottom:7px;">
-                    {int(row['sum']):,} caixas
+                    {int(row['sum']):,} {t("Caixas Produzidas")}
                 </div>
                 <div style="font-size: 1.08em; color: {BRITVIC_PRIMARY}; margin-bottom:2px;">
-                    Média diária:<br><b style="color:{BRITVIC_ACCENT};font-size:1.15em">{row['mean']:.0f}</b>
+                    {t("Média diária:")}<br><b style="color:{BRITVIC_ACCENT};font-size:1.15em">{row['mean']:.0f}</b>
                 </div>
-                <div style="font-size: 1em; color: #666;">Registros: <b>{row['count']}</b></div>
+                <div style="font-size: 1em; color: #666;">{t("Registros:")} <b>{row['count']}</b></div>
             </div>
             """, unsafe_allow_html=True
         )
@@ -270,15 +365,15 @@ exibe_kpis(df_filtrado, st.session_state["filtros"]["categoria"])
 def plot_tendencia(df, categoria):
     grupo = gerar_dataset_modelo(df, categoria)
     if grupo.empty:
-        st.info("Sem dados para tendência.")
+        st.info(t("Sem dados para tendência."))
         return
-    # Gráfico de barras de produção diária
+    # Barras de produção diária
     fig = px.bar(
         grupo,
-        x='data',
-        y='caixas_produzidas',
-        title=f"Tendência Diária - {categoria}",
-        labels={"data": "Data", "caixas_produzidas": "Caixas Produzidas"},
+        x="data",
+        y="caixas_produzidas",
+        title=f"{t('Tendência Diária')} - {categoria}",
+        labels={"data": t("Data"), "caixas_produzidas": t("Caixas Produzidas")},
         text_auto=True
     )
     fig.update_traces(marker_color=BRITVIC_PRIMARY)
@@ -298,15 +393,15 @@ def plot_variacao_mensal(df, categoria):
     mensal['var_%'] = mensal['caixas_produzidas'].pct_change() * 100
     fig1 = px.bar(
         mensal, x='mes', y='caixas_produzidas', text_auto=True,
-        title=f"Produção Mensal Total - {categoria}",
-        labels={"mes":"Mês/Ano", "caixas_produzidas":"Caixas Produzidas"}
+        title=f"{t('Produção Mensal Total')} - {categoria}",
+        labels={"mes": t("Mês/Ano"), "caixas_produzidas": t("Caixas Produzidas")}
     )
     fig1.update_traces(marker_color=BRITVIC_ACCENT)
     fig1.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY, plot_bgcolor=BRITVIC_BG)
     fig2 = px.line(
         mensal, x='mes', y='var_%', markers=True,
-        title=f"Variação Percentual Mensal (%) - {categoria}",
-        labels={"mes":"Mês/Ano", "var_%":"Variação (%)"}
+        title=f"{t('Variação Percentual Mensal (%)')} - {categoria}",
+        labels={"mes": t("Mês/Ano"), "var_%": t("Variação (%)")}
     )
     fig2.update_traces(line_color="#E67E22", marker=dict(size=7, color=BRITVIC_ACCENT))
     fig2.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY, plot_bgcolor=BRITVIC_BG)
@@ -316,13 +411,13 @@ def plot_variacao_mensal(df, categoria):
 def plot_sazonalidade(df, categoria):
     agrup = dataset_ano_mes(df, categoria)
     if agrup.empty:
-        st.info("Sem dados para sazonalidade.")
+        st.info(t("Sem dados para sazonalidade."))
         return
     fig = px.box(
         agrup, x='mes', y='caixas_produzidas', color=agrup['ano'].astype(str),
         points='all', notched=True,
-        title=f"Sazonalidade Mensal - {categoria}",
-        labels={'mes':"Mês", "caixas_produzidas":"Produção"},
+        title=f"{t('Sazonalidade Mensal')} - {categoria}",
+        labels={'mes': t("Mês"), "caixas_produzidas": t("Produção")},
         hover_data=["ano"], color_discrete_sequence=px.colors.sequential.Teal[::-1]
     )
     fig.update_layout(
@@ -332,7 +427,7 @@ def plot_sazonalidade(df, categoria):
             ticktext=[nome_mes(m) for m in range(1,13)]
         ),
         template="plotly_white",
-        legend_title="Ano",
+        legend_title=t("Ano"),
         title_font_color=BRITVIC_PRIMARY,
         plot_bgcolor=BRITVIC_BG
     )
@@ -358,10 +453,10 @@ def plot_comparativo_ano_mes(df, categoria):
         ))
     fig.update_layout(
         barmode='group',
-        title=f"Produção Mensal {categoria} - Comparativo por Ano",
-        xaxis_title="Mês",
-        yaxis_title="Caixas Produzidas",
-        legend_title="Ano",
+        title=f"{t('Produção Mensal')} {categoria} - {t('Comparativo por Ano')}",
+        xaxis_title=t("Mês"),
+        yaxis_title=t("Caixas Produzidas"),
+        legend_title=t("Ano"),
         hovermode="x unified",
         template="plotly_white",
         title_font_color=BRITVIC_PRIMARY,
@@ -376,13 +471,13 @@ def plot_comparativo_acumulado(df, categoria):
     fig = px.line(
         res, x='mes', y='acumulado', color=res['ano'].astype(str),
         markers=True,
-        labels={'mes':"Mês", 'acumulado':"Caixas Acumuladas", 'ano':'Ano'},
-        title=f"Produção Acumulada Mês a Mês - {categoria}",
+        labels={'mes': t("Mês"), 'acumulado': t("Caixas Acumuladas"), 'ano': t("Ano")},
+        title=f"{t('Produção Acumulada Mês a Mês')} - {categoria}",
         color_discrete_sequence=px.colors.sequential.Teal[::-1]
     )
     fig.update_traces(mode="lines+markers")
     fig.update_layout(
-        legend_title="Ano",
+        legend_title=t("Ano"),
         xaxis=dict(
             tickmode='array',
             tickvals=list(range(1,13)),
@@ -408,21 +503,21 @@ def rodar_previsao_prophet(df, categoria, meses_futuro=6):
 
 def plot_previsao(dados_hist, previsao, categoria):
     if previsao.empty:
-        st.info("Sem previsão disponível.")
+        st.info(t("Sem previsão disponível."))
         return
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=dados_hist['ds'], y=dados_hist['y'],
-                             mode='lines+markers', name='Histórico',
+                             mode='lines+markers', name=t('Histórico'),
                              line=dict(color=BRITVIC_PRIMARY, width=2),
                              marker=dict(color=BRITVIC_ACCENT)))
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat'],
-                             mode='lines', name='Previsão', line=dict(color=BRITVIC_ACCENT, width=2)))
+                             mode='lines', name=t('Previsão'), line=dict(color=BRITVIC_ACCENT, width=2)))
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_upper'],
-                             line=dict(dash='dash', color='#AED6F1'), name='Limite Superior', opacity=0.3))
+                             line=dict(dash='dash', color='#AED6F1'), name=t("Limite Superior"), opacity=0.3))
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_lower'],
-                             line=dict(dash='dash', color='#AED6F1'), name='Limite Inferior', opacity=0.3))
-    fig.update_layout(title=f"Previsão de Produção - {categoria}",
-                     xaxis_title="Data", yaxis_title="Caixas Produzidas",
+                             line=dict(dash='dash', color='#AED6F1'), name=t("Limite Inferior"), opacity=0.3))
+    fig.update_layout(title=f"{t('Previsão de Produção')} - {categoria}",
+                     xaxis_title=t("Data"), yaxis_title=t("Caixas Produzidas"),
                      template="plotly_white", hovermode="x unified",
                      title_font_color=BRITVIC_PRIMARY,
                      plot_bgcolor=BRITVIC_BG)
@@ -437,56 +532,5 @@ def gerar_insights(df, categoria):
     if len(agg) > 6:
         ultimos = min(3, len(agg))
         if agg[-ultimos:].mean() > agg[:-ultimos].mean():
-            tendencias.append("Crescimento recente na produção detectado nos últimos meses.")
-        elif agg[-ultimos:].mean() < agg[:-ultimos].mean():
-            tendencias.append("Queda recente na produção detectada nos últimos meses.")
-    q1 = grupo['caixas_produzidas'].quantile(0.25)
-    q3 = grupo['caixas_produzidas'].quantile(0.75)
-    outliers = grupo[(grupo['caixas_produzidas'] < q1 - 1.5*(q3-q1)) | (grupo['caixas_produzidas'] > q3 + 1.5*(q3-q1))]
-    if not outliers.empty:
-        tendencias.append(f"Foram encontrados {outliers.shape[0]} dias atípicos de produção (possíveis outliers).")
-    std = grupo['caixas_produzidas'].std()
-    mean = grupo['caixas_produzidas'].mean()
-    if mean > 0 and std/mean > 0.5:
-        tendencias.append("Alta variabilidade diária. Sugerido investigar causas das flutuações.")
-    with st.expander("Insights Automáticos", expanded=True):
-        for t in tendencias:
-            st.info(t)
-        if not tendencias:
-            st.success("Nenhum padrão preocupante encontrado para esta categoria.")
-
-def exportar_consolidado(df, previsao, categoria):
-    if previsao.empty:
-        st.warning("Sem previsão para exportar.")
-        return
-    dados = gerar_dataset_modelo(df, categoria)
-    previsao_col = previsao[['ds', 'yhat']].rename(columns={'ds':'data', 'yhat':'previsao_caixas'})
-    base_export = dados.merge(previsao_col, left_on='data', right_on='data', how='outer').sort_values("data")
-    base_export['categoria'] = categoria
-    nome_arq = f'consolidado_{categoria.lower()}.xlsx'
-    return base_export, nome_arq
-
-# -- Execução dos gráficos e análises --
-plot_tendencia(df_filtrado, st.session_state["filtros"]["categoria"])
-plot_variacao_mensal(df_filtrado, st.session_state["filtros"]["categoria"])
-plot_sazonalidade(df_filtrado, st.session_state["filtros"]["categoria"])
-if len(set(df_filtrado['data'].dt.year)) > 1:
-    plot_comparativo_ano_mes(df_filtrado, st.session_state["filtros"]["categoria"])
-    plot_comparativo_acumulado(df_filtrado, st.session_state["filtros"]["categoria"])
-dados_hist, previsao, modelo_prophet = rodar_previsao_prophet(df_filtrado, st.session_state["filtros"]["categoria"], meses_futuro=6)
-plot_previsao(dados_hist, previsao, st.session_state["filtros"]["categoria"])
-gerar_insights(df_filtrado, st.session_state["filtros"]["categoria"])
-
-# --------- EXPORTAÇÃO AMIGÁVEL ---------
-with st.expander("Exportação"):
-    if st.button("⬇️ Exportar consolidado com previsão (.xlsx)", help="Clique para exportar os dados atuais filtrados para Excel"):
-        base_export, nome_arq = exportar_consolidado(df_filtrado, previsao, st.session_state["filtros"]["categoria"])
-        buffer = io.BytesIO()
-        base_export.to_excel(buffer, index=False, engine='openpyxl')
-        buffer.seek(0)
-        st.download_button(
-            label="Download arquivo Excel ⬇️",
-            data=buffer,
-            file_name=nome_arq,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+            tendencias.append(t("Crescimento recente na produção detectado nos últimos meses."))
+        elif agg
