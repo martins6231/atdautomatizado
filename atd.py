@@ -16,7 +16,7 @@ st.set_page_config(
     page_icon="🧃"
 )
 
-# ----------- Suporte Bilíngue (Português e Inglês) -----------
+# ----------- Suporte Bilíngue -----------
 LANGS = {
     "pt": "Português (Brasil)",
     "en": "English"
@@ -71,7 +71,6 @@ def t(msg_key, **kwargs):
             "historico": "Histórico",
             "kpi_daily_avg": "Média diária:<br><b style='color:{accent};font-size:1.15em'>{media:.0f}</b>",
             "kpi_records": "Registros: <b>{count}</b>",
-            # Labels
             "data": "Data",
             "category_lbl": "Categoria",
             "produced_boxes": "Caixas Produzidas",
@@ -81,6 +80,7 @@ def t(msg_key, **kwargs):
             "year_lbl": "Ano",
             "accum_boxes": "Caixas Acumuladas",
             "forecast_boxes": "Previsão Caixas",
+            "select_date_range": "Selecione o intervalo de datas:",
         },
         "en": {
             "dashboard_title": "Production Dashboard - Britvic",
@@ -96,7 +96,7 @@ def t(msg_key, **kwargs):
             "col_with_missing": "Column '{col}' has {num} missing values.",
             "negatives": "{num} negative records in 'caixas_produzidas'.",
             "no_critical": "No critical issues found.",
-            "data_issue_report": "Report of Identified Issues",
+            "data_issue_report": "Report of Identified Issues",
             "no_data_selection": "No data for selection.",
             "no_trend": "No data for trend.",
             "daily_trend": "Daily Trend - {cat}",
@@ -126,7 +126,6 @@ def t(msg_key, **kwargs):
             "historico": "History",
             "kpi_daily_avg": "Daily avg.:<br><b style='color:{accent};font-size:1.15em'>{media:.0f}</b>",
             "kpi_records": "Records: <b>{count}</b>",
-            # Labels
             "data": "Date",
             "category_lbl": "Category",
             "produced_boxes": "Produced Boxes",
@@ -136,6 +135,7 @@ def t(msg_key, **kwargs):
             "year_lbl": "Year",
             "accum_boxes": "Accum. Boxes",
             "forecast_boxes": "Forecasted Boxes",
+            "select_date_range": "Select date range:",
         }
     }
     base = TRANSLATE[idioma].get(msg_key, msg_key)
@@ -222,21 +222,23 @@ def convert_gsheet_link(shared_url):
 @st.cache_data(ttl=600)
 def carregar_excel_nuvem(link):
     url = convert_gsheet_link(link)
-    resp = requests.get(url)
-    if resp.status_code != 200:
-        st.error(t("error_download_xls", code=resp.status_code))
-        return None
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-        tmp.write(resp.content)
-        tmp.flush()
-        if not is_excel_file(tmp.name):
-            st.error(t("not_valid_excel"))
+    with st.spinner("Carregando dados..."):
+        resp = requests.get(url)
+        if resp.status_code != 200:
+            st.error(t("error_download_xls", code=resp.status_code))
             return None
-        try:
-            df = pd.read_excel(tmp.name, engine="openpyxl")
-        except Exception as e:
-            st.error(t("excel_open_error", err=e))
-            return None
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+            tmp.write(resp.content)
+            tmp.flush()
+            if not is_excel_file(tmp.name):
+                st.error(t("not_valid_excel"))
+                return None
+            try:
+                df = pd.read_excel(tmp.name, engine="openpyxl")
+            except Exception as e:
+                st.error(t("excel_open_error", err=e))
+                return None
+        st.success("Dados carregados com sucesso!")
     return df
 
 if "CLOUD_XLSX_URL" not in st.secrets:
@@ -313,293 +315,73 @@ default_categoria = categorias[0] if categorias else None
 default_anos = anos_disp
 default_meses_nome = meses_nome
 
-if "filtros" not in st.session_state:
-    st.session_state["filtros"] = {
-        "categoria": default_categoria,
-        "anos": default_anos,
-        "meses_nome": default_meses_nome
-    }
-
-with st.sidebar:
-    categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
-    anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
-    meses_selecionados_nome = st.multiselect(
-    t("month"), 
-    meses_nome, 
-    default=default_meses_nome, 
-    key="mesbox"
+# Navegação por páginas
+pagina = st.sidebar.radio(
+    "Navegação",
+    ["Visão Geral", "Análise Detalhada", "Previsões"],
+    key="pagina"
 )
-st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
-st.session_state["filtros"]["anos"] = st.session_state["anobox"]
-st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
 
-meses_selecionados = [map_mes[n] for n in st.session_state["filtros"]["meses_nome"] if n in map_mes]
+if pagina == "Visão Geral":
+    if "filtros" not in st.session_state:
+        st.session_state["filtros"] = {
+            "categoria": default_categoria,
+            "anos": default_anos,
+            "meses_nome": default_meses_nome
+        }
 
-df_filtrado = filtrar_periodo(df, st.session_state["filtros"]["categoria"], st.session_state["filtros"]["anos"], meses_selecionados)
-
-# --------- Subtítulo ---------
-st.markdown(
-    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=st.session_state['filtros']['categoria'])}</h3>",
-    unsafe_allow_html=True
-)
-if df_filtrado.empty:
-    st.error(t("empty_data_for_period"))
-    st.stop()
-
-# --------- KPIs / Métricas --------
-def exibe_kpis(df, categoria):
-    df_cat = df[df['categoria'] == categoria]
-    if df_cat.empty:
-        st.info(t("no_data_selection"))
-        return None
-    df_cat['ano'] = df_cat['data'].dt.year
-    kpis = df_cat.groupby('ano')['caixas_produzidas'].agg(['sum', 'mean', 'std', 'count']).reset_index()
-    st.markdown(
-        f"""
-        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 18px;">
-        """, unsafe_allow_html=True
-    )
-    for _, row in kpis.iterrows():
-        ano = int(row['ano'])
-        st.markdown(
-            f"""
-            <div style="
-                background: #e8f8ee;
-                border-radius: 18px;
-                box-shadow: 0 6px 28px 0 rgba(0, 48, 87, 0.13);
-                padding: 28px 38px 22px 38px;
-                min-width: 220px;
-                margin-bottom: 13px;
-                text-align: center;
-            ">
-                <div style="font-weight: 600; color: {BRITVIC_PRIMARY}; font-size: 1.12em; margin-bottom:5px;">
-                    {t("kpi_year", ano=ano)}
-                </div>
-                <div style="color: {BRITVIC_ACCENT}; font-size:2.1em; font-weight:bold; margin-bottom:7px;">
-                    {t("kpi_sum", qtd=int(row['sum']))}
-                </div>
-                <div style="font-size: 1.08em; color: {BRITVIC_PRIMARY}; margin-bottom:2px;">
-                    {t('kpi_daily_avg', media=row["mean"], accent=BRITVIC_ACCENT)}
-                </div>
-                <div style="font-size: 1em; color: #666;">{t('kpi_records', count=row['count'])}</div>
-            </div>
-            """, unsafe_allow_html=True
+    with st.sidebar:
+        categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
+        anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
+        meses_selecionados_nome = st.multiselect(
+            t("month"), 
+            meses_nome, 
+            default=default_meses_nome, 
+            key="mesbox"
         )
-    st.markdown("</div>", unsafe_allow_html=True)
-    return kpis
+        
+        # Novo filtro de intervalo de datas
+        data_inicial, data_final = st.date_input(
+            t("select_date_range"),
+            [df['data'].min().date(), df['data'].max().date()],
+            min_value=df['data'].min().date(),
+            max_value=df['data'].max().date()
+        )
+        df = df[(df['data'] >= pd.to_datetime(data_inicial)) & (df['data'] <= pd.to_datetime(data_final))]
 
-exibe_kpis(df_filtrado, st.session_state["filtros"]["categoria"])
+    st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
+    st.session_state["filtros"]["anos"] = st.session_state["anobox"]
+    st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
 
-# --------- GRÁFICOS ---------
+    meses_selecionados = [map_mes[n] for n in st.session_state["filtros"]["meses_nome"] if n in map_mes]
 
-def plot_tendencia(df, categoria):
-    grupo = gerar_dataset_modelo(df, categoria)
-    if grupo.empty:
-        st.info(t("no_trend"))
-        return
-    fig = px.bar(
-        grupo, x='data', y='caixas_produzidas',
-        title=t("daily_trend", cat=categoria),
-        labels={
-            "data": t("data"), 
-            "caixas_produzidas": t("produced_boxes")
-        },
-        text_auto=True
+    df_filtrado = filtrar_periodo(df, st.session_state["filtros"]["categoria"], st.session_state["filtros"]["anos"], meses_selecionados)
+
+    if df_filtrado.empty:
+        st.error(t("empty_data_for_period"))
+        st.stop()
+
+    # --------- Subtítulo ---------
+    st.markdown(
+        f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=st.session_state['filtros']['categoria'])}</h3>",
+        unsafe_allow_html=True
     )
-    fig.update_traces(marker_color=BRITVIC_ACCENT)
-    fig.update_layout(
-        template="plotly_white", 
-        hovermode="x",
-        title_font_color=BRITVIC_PRIMARY,
-        plot_bgcolor=BRITVIC_BG
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
-def plot_variacao_mensal(df, categoria):
-    agrup = dataset_ano_mes(df, categoria)
-    mensal = agrup.groupby([agrup['data'].dt.to_period('M')])['caixas_produzidas'].sum().reset_index()
-    mensal['mes'] = mensal['data'].dt.strftime('%b/%Y')
-    mensal['var_%'] = mensal['caixas_produzidas'].pct_change() * 100
-    fig1 = px.bar(
-        mensal, x='mes', y='caixas_produzidas', text_auto=True,
-        title=t("monthly_total", cat=categoria),
-        labels={"mes":t("month_lbl"), "caixas_produzidas":t("produced_boxes")}
-    )
-    fig1.update_traces(marker_color=BRITVIC_ACCENT)
-    fig1.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY, plot_bgcolor=BRITVIC_BG)
-    fig2 = px.line(
-        mensal, x='mes', y='var_%', markers=True,
-        title=t("monthly_var", cat=categoria),
-        labels={"mes": t("month_lbl"), "var_%":t("variation")}
-    )
-    fig2.update_traces(line_color="#E67E22", marker=dict(size=7, color=BRITVIC_ACCENT))
-    fig2.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY, plot_bgcolor=BRITVIC_BG)
-    st.plotly_chart(fig1, use_container_width=True)
-    st.plotly_chart(fig2, use_container_width=True)
+    exibe_kpis(df_filtrado, st.session_state["filtros"]["categoria"])
 
-def plot_sazonalidade(df, categoria):
-    agrup = dataset_ano_mes(df, categoria)
-    if agrup.empty:
-        st.info(t("no_trend"))
-        return
-    fig = px.box(
-        agrup, x='mes', y='caixas_produzidas', color=agrup['ano'].astype(str),
-        points='all', notched=True,
-        title=t("monthly_seasonal", cat=categoria),
-        labels={'mes': t("month_lbl"), "caixas_produzidas":t("prod")},
-        hover_data=["ano"], color_discrete_sequence=px.colors.sequential.Teal[::-1]
-    )
-    fig.update_layout(
-        xaxis=dict(
-            tickmode='array',
-            tickvals=list(range(1,13)),
-            ticktext=[nome_mes(m) for m in range(1,13)]
-        ),
-        template="plotly_white",
-        legend_title=t('year_lbl'),
-        title_font_color=BRITVIC_PRIMARY,
-        plot_bgcolor=BRITVIC_BG
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    plot_tendencia(df_filtrado, st.session_state["filtros"]["categoria"])
+    plot_variacao_mensal(df_filtrado, st.session_state["filtros"]["categoria"])
+    plot_sazonalidade(df_filtrado, st.session_state["filtros"]["categoria"])
 
-def plot_comparativo_ano_mes(df, categoria):
-    agrup = dataset_ano_mes(df, categoria)
-    tab = agrup.groupby(['ano','mes'])['caixas_produzidas'].sum().reset_index()
-    tab['mes_nome'] = tab['mes'].apply(nome_mes)
-    tab = tab.sort_values(['mes'])
-    fig = go.Figure()
-    anos = sorted(tab['ano'].unique())
-    cores = px.colors.qualitative.Dark24
-    for idx, ano in enumerate(anos):
-        dados_ano = tab[tab['ano'] == ano]
-        fig.add_trace(go.Bar(
-            x=dados_ano['mes_nome'],
-            y=dados_ano['caixas_produzidas'],
-            name=str(ano),
-            text=dados_ano['caixas_produzidas'],
-            textposition='auto',
-            marker_color=cores[idx % len(cores)]
-        ))
-    fig.update_layout(
-        barmode='group',
-        title=t("monthly_comp", cat=categoria),
-        xaxis_title=t("month_lbl"),
-        yaxis_title=t("produced_boxes"),
-        legend_title=t("year_lbl"),
-        hovermode="x unified",
-        template="plotly_white",
-        title_font_color=BRITVIC_PRIMARY,
-        plot_bgcolor=BRITVIC_BG
-    )
-    st.plotly_chart(fig, use_container_width=True)
+elif pagina == "Análise Detalhada":
+    if len(set(df_filtrado['data'].dt.year)) > 1:
+        plot_comparativo_ano_mes(df_filtrado, st.session_state["filtros"]["categoria"])
+        plot_comparativo_acumulado(df_filtrado, st.session_state["filtros"]["categoria"])
+    gerar_insights(df_filtrado, st.session_state["filtros"]["categoria"])
 
-def plot_comparativo_acumulado(df, categoria):
-    agrup = dataset_ano_mes(df, categoria)
-    res = agrup.groupby(['ano','mes'])['caixas_produzidas'].sum().reset_index()
-    res['acumulado'] = res.groupby('ano')['caixas_produzidas'].cumsum()
-    fig = px.line(
-        res, x='mes', y='acumulado', color=res['ano'].astype(str),
-        markers=True,
-        labels={'mes': t("month_lbl"), 'acumulado':t("accum_boxes"), 'ano':t("year_lbl")},
-        title=t("monthly_accum", cat=categoria),
-        color_discrete_sequence=px.colors.sequential.Teal[::-1]
-    )
-    fig.update_traces(mode="lines+markers")
-    fig.update_layout(
-        legend_title=t("year_lbl"),
-        xaxis=dict(
-            tickmode='array',
-            tickvals=list(range(1,13)),
-            ticktext=[nome_mes(m) for m in range(1,13)]
-        ),
-        hovermode="x unified",
-        template="plotly_white",
-        title_font_color=BRITVIC_PRIMARY,
-        plot_bgcolor=BRITVIC_BG
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-def rodar_previsao_prophet(df, categoria, meses_futuro=6):
-    dataset = gerar_dataset_modelo(df, categoria)
-    if dataset.shape[0] < 2:
-        return dataset, pd.DataFrame(), None
-    dados = dataset.rename(columns={'data':'ds', 'caixas_produzidas':'y'})
-    modelo = Prophet(yearly_seasonality=True, daily_seasonality=False)
-    modelo.fit(dados)
-    futuro = modelo.make_future_dataframe(periods=meses_futuro*30)
-    previsao = modelo.predict(futuro)
-    return dados, previsao, modelo
-
-def plot_previsao(dados_hist, previsao, categoria):
-    if previsao.empty:
-        st.info(t("no_forecast"))
-        return
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=dados_hist['ds'], y=dados_hist['y'],
-                             mode='lines+markers', name=t("historico"),
-                             line=dict(color=BRITVIC_PRIMARY, width=2),
-                             marker=dict(color=BRITVIC_ACCENT)))
-    fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat'],
-                             mode='lines', name=t("forecast"), line=dict(color=BRITVIC_ACCENT, width=2)))
-    fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_upper'],
-                             line=dict(dash='dash', color='#AED6F1'), name='Upper', opacity=0.3))
-    fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat_lower'],
-                             line=dict(dash='dash', color='#AED6F1'), name='Lower', opacity=0.3))
-    fig.update_layout(title=t("forecast", cat=categoria),
-                     xaxis_title=t("data"), yaxis_title=t("produced_boxes"),
-                     template="plotly_white", hovermode="x unified",
-                     title_font_color=BRITVIC_PRIMARY,
-                     plot_bgcolor=BRITVIC_BG)
-    st.plotly_chart(fig, use_container_width=True)
-
-def gerar_insights(df, categoria):
-    grupo = gerar_dataset_modelo(df, categoria)
-    tendencias = []
-    mensal = grupo.copy()
-    mensal['mes'] = mensal['data'].dt.to_period('M')
-    agg = mensal.groupby('mes')['caixas_produzidas'].sum()
-    if len(agg) > 6:
-        ultimos = min(3, len(agg))
-        if agg[-ultimos:].mean() > agg[:-ultimos].mean():
-            tendencias.append(t("recent_growth"))
-        elif agg[-ultimos:].mean() < agg[:-ultimos].mean():
-            tendencias.append(t("recent_fall"))
-    q1 = grupo['caixas_produzidas'].quantile(0.25)
-    q3 = grupo['caixas_produzidas'].quantile(0.75)
-    outliers = grupo[(grupo['caixas_produzidas'] < q1 - 1.5*(q3-q1)) | (grupo['caixas_produzidas'] > q3 + 1.5*(q3-q1))]
-    if not outliers.empty:
-        tendencias.append(t("outlier_days", num=outliers.shape[0]))
-    std = grupo['caixas_produzidas'].std()
-    mean = grupo['caixas_produzidas'].mean()
-    if mean > 0 and std/mean > 0.5:
-        tendencias.append(t("high_var"))
-    with st.expander(t("auto_insights"), expanded=True):
-        for text in tendencias:
-            st.info(text)
-        if not tendencias:
-            st.success(t("no_pattern"))
-
-def exportar_consolidado(df, previsao, categoria):
-    if previsao.empty:
-        st.warning(t("no_export"))
-        return
-    dados = gerar_dataset_modelo(df, categoria)
-    previsao_col = previsao[['ds', 'yhat']].rename(columns={'ds':'data', 'yhat':'previsao_caixas'})
-    base_export = dados.merge(previsao_col, left_on='data', right_on='data', how='outer').sort_values("data")
-    base_export['categoria'] = categoria
-    nome_arq = f'consolidado_{categoria.lower()}.xlsx'
-    return base_export, nome_arq
-
-# ---- Execução dos gráficos e análises ----
-plot_tendencia(df_filtrado, st.session_state["filtros"]["categoria"])
-plot_variacao_mensal(df_filtrado, st.session_state["filtros"]["categoria"])
-plot_sazonalidade(df_filtrado, st.session_state["filtros"]["categoria"])
-if len(set(df_filtrado['data'].dt.year)) > 1:
-    plot_comparativo_ano_mes(df_filtrado, st.session_state["filtros"]["categoria"])
-    plot_comparativo_acumulado(df_filtrado, st.session_state["filtros"]["categoria"])
-dados_hist, previsao, modelo_prophet = rodar_previsao_prophet(df_filtrado, st.session_state["filtros"]["categoria"], meses_futuro=6)
-plot_previsao(dados_hist, previsao, st.session_state["filtros"]["categoria"])
-gerar_insights(df_filtrado, st.session_state["filtros"]["categoria"])
+elif pagina == "Previsões":
+    dados_hist, previsao, modelo_prophet = rodar_previsao_prophet(df_filtrado, st.session_state["filtros"]["categoria"], meses_futuro=6)
+    plot_previsao(dados_hist, previsao, st.session_state["filtros"]["categoria"])
 
 # --------- EXPORTAÇÃO ---------
 with st.expander(t("export")):
