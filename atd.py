@@ -95,7 +95,7 @@ def t(msg_key, **kwargs):
             "col_with_missing": "Column '{col}' has {num} missing values.",
             "negatives": "{num} negative records in 'caixas_produzidas'.",
             "no_critical": "No critical issues found.",
-            "data_issue_report": "Problem report found",
+            "data_issue_report": "Report of Identified Issues",
             "no_data_selection": "No data for selection.",
             "no_trend": "No data for trend.",
             "daily_trend": "Daily Trend - {cat}",
