@@ -16,71 +16,10 @@ BRITVIC_ACCENT = "#27AE60"
 BRITVIC_BG = "#F4FFF6"
 
 # --------- Dicionário de Tradução -----------
-TRANSLATIONS = (
+TRANSLATIONS = {
     "Dashboard de Produção": {"pt": "Dashboard de Produção", "en": "Production Dashboard"},
-    "Análise para categoria:": {"pt": "Análise para categoria:", "en": "Analysis for category:"},
-    "Não há dados para esse período e categoria.": {"pt": "Não há dados para esse período e categoria.", "en": "No data for this period and category."},
-    "Média diária:": {"pt": "Média diária:", "en": "Daily average:"},
-    "Registros:": {"pt": "Registros:", "en": "Records:"},
-    "Nenhum problema crítico encontrado.": {"pt": "Nenhum problema crítico encontrado.", "en": "No critical problems found."},
-    "Coluna obrigatória ausente:": {"pt": "Coluna obrigatória ausente:", "en": "Missing required column:"},
-    "Erro ao converter coluna 'data'.": {"pt": "Erro ao converter coluna 'data'.", "en": "Error converting 'data' column."},
-    "Coluna '{col}' com {qtd} valores ausentes.": {"pt": "Coluna '{col}' com {qtd} valores ausentes.", "en": "Column '{col}' with {qtd} missing values."},
-    "{negativos} registros negativos em 'caixas_produzidas'.": {"pt": "{negativos} registros negativos em 'caixas_produzidas'.", "en": "{negativos} negative entries in 'caixas_produzidas'."},
-    "Relatório de problemas encontrados": {"pt": "Relatório de problemas encontrados", "en": "Issues detected report"},
-    "🏷️ Categoria:": {"pt": "🏷️ Categoria:", "en": "🏷️ Category:"},
-    "📅 Ano(s):": {"pt": "📅 Ano(s):", "en": "📅 Year(s):"},
-    "📆 Mês(es):": {"pt": "📆 Mês(es):", "en": "📆 Month(s):"},
-    "Tendência Diária": {"pt": "Tendência Diária", "en": "Daily Trend"},
-    "Caixas Produzidas": {"pt": "Caixas Produzidas", "en": "Produced Boxes"},
-    "Data": {"pt": "Data", "en": "Date"},
-    "Sem dados para tendência.": {"pt": "Sem dados para tendência.", "en": "No data for trend."},
-
-    "Produção Mensal Total": {"pt": "Produção Mensal Total", "en": "Monthly Production Total"},
-    "Mês/Ano": {"pt": "Mês/Ano", "en": "Month/Year"},
-    "Variação Percentual Mensal (%)": {"pt": "Variação Percentual Mensal (%)", "en": "Monthly Percentage Variation (%)"},
-    "Variação (%)": {"pt": "Variação (%)", "en": "Variation (%)"},
-
-    "Sazonalidade Mensal": {"pt": "Sazonalidade Mensal", "en": "Monthly Seasonality"},
-    "Mês": {"pt": "Mês", "en": "Month"},
-    "Produção": {"pt": "Produção", "en": "Production"},
-    "Ano": {"pt": "Ano", "en": "Year"},
-    "Sem dados para sazonalidade.": {"pt": "Sem dados para sazonalidade.", "en": "No data for seasonality."},
-
-    "Produção Mensal": {"pt": "Produção Mensal", "en": "Monthly Production"},
-    "Comparativo por Ano": {"pt": "Comparativo por Ano", "en": "Yearly Comparison"},
-    "Produção Acumulada Mês a Mês": {"pt": "Produção Acumulada Mês a Mês", "en": "Cumulative Production Month by Month"},
-    "Caixas Acumuladas": {"pt": "Caixas Acumuladas", "en": "Cumulative Boxes"},
-    "Limite Superior": {"pt": "Limite Superior", "en": "Upper Limit"},
-    "Limite Inferior": {"pt": "Limite Inferior", "en": "Lower Limit"},
-    "Previsão de Produção": {"pt": "Previsão de Produção", "en": "Production Forecast"},
-    "Previsão": {"pt": "Previsão", "en": "Forecast"},
-    "Histórico": {"pt": "Histórico", "en": "Historical"},
-    "Sem previsão disponível.": {"pt": "Sem previsão disponível.", "en": "No forecast available."},
-
-    "Insights Automáticos": {"pt": "Insights Automáticos", "en": "Automatic Insights"},
-    "Crescimento recente na produção detectado nos últimos meses.": {"pt": "Crescimento recente na produção detectado nos últimos meses.", "en": "Recent growth in production detected over the last months."},
-    "Queda recente na produção detectada nos últimos meses.": {"pt": "Queda recente na produção detectada nos últimos meses.", "en": "Recent drop in production detected over the last months."},
-    "Foram encontrados {qtd} dias atípicos de produção (possíveis outliers).": {"pt": "Foram encontrados {qtd} dias atípicos de produção (possíveis outliers).", "en": "Found {qtd} atypical days of production (possible outliers)."},
-    "Alta variabilidade diária. Sugerido investigar causas das flutuações.": {"pt": "Alta variabilidade diária. Sugerido investigar causas das flutuações.", "en": "High daily variability. Suggested to investigate the causes for these fluctuations."},
-    "Nenhum padrão preocupante encontrado para esta categoria.": {"pt": "Nenhum padrão preocupante encontrado para esta categoria.", "en": "No concerning pattern found for this category."},
-
-    "Exportação": {"pt": "Exportação", "en": "Export"},
-    "⬇️ Exportar consolidado com previsão (.xlsx)": {"pt": "⬇️ Exportar consolidado com previsão (.xlsx)", "en": "⬇️ Export consolidated with forecast (.xlsx)"},
-    "Clique para exportar os dados atuais filtrados para Excel": {"pt": "Clique para exportar os dados atuais filtrados para Excel", "en": "Click to export current filtered data to Excel"},
-    "Download arquivo Excel ⬇️": {"pt": "Download arquivo Excel ⬇️", "en": "Download Excel file ⬇️"},
-    "Sem previsão para exportar.": {"pt": "Sem previsão para exportar.", "en": "No forecast to export."},
-
-    "Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.": {
-        "pt": "Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.",
-        "en": "Add CLOUD_XLSX_URL to your .streamlit/secrets.toml and share the spreadsheet for 'anyone with the link'."
-    },
-    "Erro ao baixar planilha. Status code: {status}": {"pt": "Erro ao baixar planilha. Status code: {status}", "en": "Error downloading spreadsheet. Status code: {status}"},
-    "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!": {"pt": "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!", "en": "Downloaded file is not a valid Excel. Confirm if the link is public/correct!"},
-    "Erro ao abrir o Excel: {erro}": {"pt": "Erro ao abrir o Excel: {erro}", "en": "Error opening Excel file: {erro}"},
-    "Sem dados para a seleção.": {"pt": "Sem dados para a seleção.", "en": "No data for the selection."}
-    )
-
+    "Categoria": {"pt": "Categoria", "en": "Category"}
+}
 # ----------- Função de Tradução -------------
 def get_lang():
     return "pt" if st.session_state.get("lang", "Português") == "Português" else "en"
