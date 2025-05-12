@@ -341,10 +341,9 @@ with st.sidebar:
 
 # Converter para datetime para comparação
 df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
-
-    st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
-    st.session_state["filtros"]["anos"] = st.session_state["anobox"]
-    st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
+st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
+st.session_state["filtros"]["anos"] = st.session_state["anobox"]
+st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
 
 meses_selecionados = [map_mes[n] for n in st.session_state["filtros"]["meses_nome"] if n in map_mes]
 
