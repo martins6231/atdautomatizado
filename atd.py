@@ -16,7 +16,7 @@ BRITVIC_ACCENT = "#27AE60"
 BRITVIC_BG = "#F4FFF6"
 
 # --------- Dicionário de Tradução -----------
-TRANSLATIONS = {
+TRANSLATIONS = (
     "Dashboard de Produção": {"pt": "Dashboard de Produção", "en": "Production Dashboard"},
     "Análise para categoria:": {"pt": "Análise para categoria:", "en": "Analysis for category:"},
     "Não há dados para esse período e categoria.": {"pt": "Não há dados para esse período e categoria.", "en": "No data for this period and category."},
@@ -79,7 +79,7 @@ TRANSLATIONS = {
     "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!": {"pt": "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!", "en": "Downloaded file is not a valid Excel. Confirm if the link is public/correct!"},
     "Erro ao abrir o Excel: {erro}": {"pt": "Erro ao abrir o Excel: {erro}", "en": "Error opening Excel file: {erro}"},
     "Sem dados para a seleção.": {"pt": "Sem dados para a seleção.", "en": "No data for the selection."}
-}
+    )
 
 # ----------- Função de Tradução -------------
 def get_lang():
