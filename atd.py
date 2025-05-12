@@ -11,7 +11,7 @@ from prophet import Prophet
 import calendar
 
 st.set_page_config(
-    page_title=t("dashboard_title"),
+    page_title=t("Dashboard de Produção"),
     layout="wide",
     page_icon="🧃"
 )
