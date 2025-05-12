@@ -10,7 +10,6 @@ import zipfile
 from prophet import Prophet
 import calendar
 
-# Configuração da página
 st.set_page_config(
     page_title="Dashboard de Produção - Britvic",
     layout="wide",
@@ -29,32 +28,134 @@ idioma = st.sidebar.radio("Escolha o idioma / Choose language:", options=list(LA
 def t(msg_key, **kwargs):
     TRANSLATE = {
         "pt": {
-            # Adicione todas as traduções necessárias aqui
             "dashboard_title": "Dashboard de Produção - Britvic",
             "main_title": "Dashboard de Produção",
             "subtitle": "Visualização dos dados de produção Britvic",
-            # Outros elementos omitidos para concisão
+            "category": "🏷️ Categoria:",
+            "year": "📅 Ano(s):",
+            "month": "📆 Mês(es):",
+            "analysis_for": "Análise para categoria: <b>{cat}</b>",
+            "empty_data_for_period": "Não há dados para esse período e categoria.",
+            "mandatory_col_missing": "Coluna obrigatória ausente: {col}",
+            "error_date_conversion": "Erro ao converter coluna 'data'.",
+            "col_with_missing": "Coluna '{col}' com {num} valores ausentes.",
+            "negatives": "{num} registros negativos em 'caixas_produzidas'.",
+            "no_critical": "Nenhum problema crítico encontrado.",
+            "data_issue_report": "Relatório de problemas encontrados",
+            "no_data_selection": "Sem dados para a seleção.",
+            "no_trend": "Sem dados para tendência.",
+            "daily_trend": "Tendência Diária - {cat}",
+            "monthly_total": "Produção Mensal Total - {cat}",
+            "monthly_var": "Variação Percentual Mensal (%) - {cat}",
+            "monthly_seasonal": "Sazonalidade Mensal - {cat}",
+            "monthly_comp": "Produção Mensal {cat} - Comparativo por Ano",
+            "monthly_accum": "Produção Acumulada Mês a Mês - {cat}",
+            "no_forecast": "Sem previsão disponível.",
+            "forecast": "Previsão de Produção - {cat}",
+            "auto_insights": "Insights Automáticos",
+            "no_pattern": "Nenhum padrão preocupante encontrado para esta categoria.",
+            "recent_growth": "Crescimento recente na produção detectado nos últimos meses.",
+            "recent_fall": "Queda recente na produção detectada nos últimos meses.",
+            "outlier_days": "Foram encontrados {num} dias atípicos de produção (possíveis outliers).",
+            "high_var": "Alta variabilidade diária. Sugerido investigar causas das flutuações.",
+            "export": "Exportação",
+            "export_with_fc": "⬇️ Exportar consolidado com previsão (.xlsx)",
+            "download_file": "Download arquivo Excel ⬇️",
+            "no_export": "Sem previsão para exportar.",
+            "add_secrets": "Adicione CLOUD_XLSX_URL ao seu .streamlit/secrets.toml e compartilhe a planilha para 'qualquer pessoa com o link'.",
+            "error_download_xls": "Erro ao baixar planilha. Status code: {code}",
+            "not_valid_excel": "Arquivo baixado não é um Excel válido. Confirme se o link é público/correto!",
+            "excel_open_error": "Erro ao abrir o Excel: {err}",
+            "kpi_year": "📦 Ano {ano}",
+            "kpi_sum": "{qtd:,} caixas",
+            "historico": "Histórico",
+            "kpi_daily_avg": "Média diária:<br><b style='color:{accent};font-size:1.15em'>{media:.0f}</b>",
+            "kpi_records": "Registros: <b>{count}</b>",
+            # Labels
+            "data": "Data",
+            "category_lbl": "Categoria",
+            "produced_boxes": "Caixas Produzidas",
+            "month_lbl": "Mês/Ano",
+            "variation": "Variação (%)",
+            "prod": "Produção",
+            "year_lbl": "Ano",
+            "accum_boxes": "Caixas Acumuladas",
+            "forecast_boxes": "Previsão Caixas",
         },
         "en": {
-            # Adicione todas as traduções necessárias aqui
             "dashboard_title": "Production Dashboard - Britvic",
             "main_title": "Production Dashboard",
             "subtitle": "Britvic production data visualization",
-            # Outros elementos omitidos para concisão
+            "category": "🏷️ Category:",
+            "year": "📅 Year(s):",
+            "month": "📆 Month(s):",
+            "analysis_for": "Analysis for category: <b>{cat}</b>",
+            "empty_data_for_period": "No data for this period and category.",
+            "mandatory_col_missing": "Mandatory column missing: {col}",
+            "error_date_conversion": "Error converting 'data' column.",
+            "col_with_missing": "Column '{col}' has {num} missing values.",
+            "negatives": "{num} negative records in 'caixas_produzidas'.",
+            "no_critical": "No critical issues found.",
+            "data_issue_report": "Report of Identified Issues",
+            "no_data_selection": "No data for selection.",
+            "no_trend": "No data for trend.",
+            "daily_trend": "Daily Trend - {cat}",
+            "monthly_total": "Total Monthly Production - {cat}",
+            "monthly_var": "Monthly Change (%) - {cat}",
+            "monthly_seasonal": "Monthly Seasonality - {cat}",
+            "monthly_comp": "Monthly Production {cat} - Year Comparison",
+            "monthly_accum": "Accumulated Production Month by Month - {cat}",
+            "no_forecast": "No available forecast.",
+            "forecast": "Production Forecast - {cat}",
+            "auto_insights": "Automatic Insights",
+            "no_pattern": "No concerning patterns found for this category.",
+            "recent_growth": "Recent growth in production detected in the last months.",
+            "recent_fall": "Recent drop in production detected in the last months.",
+            "outlier_days": "{num} atypical production days found (possible outliers).",
+            "high_var": "High daily variability. Suggest to investigate fluctuation causes.",
+            "export": "Export",
+            "export_with_fc": "⬇️ Export with forecast (.xlsx)",
+            "download_file": "Download Excel file ⬇️",
+            "no_export": "No forecast to export.",
+            "add_secrets": "Add CLOUD_XLSX_URL to your .streamlit/secrets.toml and share the sheet to 'anyone with the link'.",
+            "error_download_xls": "Error downloading spreadsheet. Status code: {code}",
+            "not_valid_excel": "Downloaded file is not a valid Excel. Confirm the link is public/correct!",
+            "excel_open_error": "Error opening Excel: {err}",
+            "kpi_year": "📦 Year {ano}",
+            "kpi_sum": "{qtd:,} boxes",
+            "historico": "History",
+            "kpi_daily_avg": "Daily avg.:<br><b style='color:{accent};font-size:1.15em'>{media:.0f}</b>",
+            "kpi_records": "Records: <b>{count}</b>",
+            # Labels
+            "data": "Date",
+            "category_lbl": "Category",
+            "produced_boxes": "Produced Boxes",
+            "month_lbl": "Month/Year",
+            "variation": "Variation (%)",
+            "prod": "Production",
+            "year_lbl": "Year",
+            "accum_boxes": "Accum. Boxes",
+            "forecast_boxes": "Forecasted Boxes",
         }
     }
     base = TRANSLATE[idioma].get(msg_key, msg_key)
-    return base.format(**kwargs)
+    if kwargs:
+        base = base.format(**kwargs)
+    return base
 
-# -------------- Estilos e Layout -------------
+# -------------- Layout e Cor padrão -------------
 BRITVIC_PRIMARY = "#003057"
 BRITVIC_ACCENT = "#27AE60"
 BRITVIC_BG = "#F4FFF6"
 
+# ---------- CSS Customizado ----------
 st.markdown(f"""
     <style>
         .stApp {{
             background-color: {BRITVIC_BG};
+        }}
+        .center {{
+            text-align: center;
         }}
         .britvic-title {{
             font-size: 2.6rem;
@@ -72,7 +173,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# ----------- Topo/Logomarca ------------
+# ----------- Topo/logomarca ------------
 st.markdown(f"""
     <div style="
         display: flex;
@@ -84,11 +185,19 @@ st.markdown(f"""
         margin-bottom: 20px;"
     >
         <img src="https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
-        <h1 class="britvic-title">{t("main_title")}</h1>
+        <h1 style="
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: {BRITVIC_PRIMARY};
+            margin: 0;"
+        >
+            {t("main_title")}
+        </h1>
     </div>
 """, unsafe_allow_html=True)
 
-# ---------- Funções Auxiliares ------------
+# ---------- Funções auxiliares ------------
+
 def nome_mes(numero):
     return calendar.month_abbr[int(numero)] if idioma == "pt" else calendar.month_name[int(numero)][:3]
 
@@ -157,10 +266,10 @@ def tratar_dados(df):
     negativos = (df['caixas_produzidas'] < 0).sum()
     if negativos > 0:
         erros.append(t("negatives", num=negativos))
-    df_clean = df.dropna(subset=obrigatorias).copy()
+    df_clean = df.dropna(subset=['categoria', 'data', 'caixas_produzidas']).copy()
     df_clean['caixas_produzidas'] = pd.to_numeric(df_clean['caixas_produzidas'], errors='coerce').fillna(0).astype(int)
     df_clean = df_clean[df_clean['caixas_produzidas'] >= 0]
-    df_clean = df_clean.drop_duplicates(subset=obrigatorias, keep='first')
+    df_clean = df_clean.drop_duplicates(subset=['categoria', 'data'], keep='first')
     return df_clean, erros
 
 df, erros = tratar_dados(df_raw)
@@ -215,11 +324,11 @@ with st.sidebar:
     categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
     anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
     meses_selecionados_nome = st.multiselect(
-        t("month"),
-        meses_nome,
-        default=default_meses_nome,
-        key="mesbox"
-    )
+    t("month"), 
+    meses_nome, 
+    default=default_meses_nome, 
+    key="mesbox"
+)
 st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
 st.session_state["filtros"]["anos"] = st.session_state["anobox"]
 st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
@@ -292,14 +401,14 @@ def plot_tendencia(df, categoria):
         grupo, x='data', y='caixas_produzidas',
         title=t("daily_trend", cat=categoria),
         labels={
-            "data": t("data"),
+            "data": t("data"), 
             "caixas_produzidas": t("produced_boxes")
         },
         text_auto=True
     )
     fig.update_traces(marker_color=BRITVIC_ACCENT)
     fig.update_layout(
-        template="plotly_white",
+        template="plotly_white", 
         hovermode="x",
         title_font_color=BRITVIC_PRIMARY,
         plot_bgcolor=BRITVIC_BG
