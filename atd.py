@@ -9,6 +9,19 @@ import tempfile
 import zipfile
 from prophet import Prophet
 import calendar
+import datetime
+
+# Garantir que as datas inicial e final sejam do tipo datetime
+data_inicial, data_final = [pd.to_datetime(d).date() for d in st.date_input(
+    "Selecione o intervalo de datas:",
+    [df['data'].min(), df['data'].max()],
+    key="date_range",
+    max_value=df['data'].max(),
+    min_value=df['data'].min()
+)]
+
+# Converter para datetime para comparação
+df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
 
 st.set_page_config(
     page_title="Dashboard de Produção - Britvic",
