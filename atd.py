@@ -16,7 +16,7 @@ st.set_page_config(
     page_icon="🧃"
 )
 
-# ----------- Suporte Bilíngue -----------
+# ----------- Suporte Bilíngue (Português e Inglês) -----------
 LANGS = {
     "pt": "Português (Brasil)",
     "en": "English"
@@ -81,7 +81,6 @@ def t(msg_key, **kwargs):
             "year_lbl": "Ano",
             "accum_boxes": "Caixas Acumuladas",
             "forecast_boxes": "Previsão Caixas",
-            "select_date_range": "Selecione o intervalo de datas:",
         },
         "en": {
             "dashboard_title": "Production Dashboard - Britvic",
@@ -97,7 +96,7 @@ def t(msg_key, **kwargs):
             "col_with_missing": "Column '{col}' has {num} missing values.",
             "negatives": "{num} negative records in 'caixas_produzidas'.",
             "no_critical": "No critical issues found.",
-            "data_issue_report": "Report of Identified Issues",
+            "data_issue_report": "Report of Identified Issues",
             "no_data_selection": "No data for selection.",
             "no_trend": "No data for trend.",
             "daily_trend": "Daily Trend - {cat}",
@@ -137,7 +136,6 @@ def t(msg_key, **kwargs):
             "year_lbl": "Year",
             "accum_boxes": "Accum. Boxes",
             "forecast_boxes": "Forecasted Boxes",
-            "select_date_range": "Select date range:",
         }
     }
     base = TRANSLATE[idioma].get(msg_key, msg_key)
@@ -326,21 +324,11 @@ with st.sidebar:
     categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
     anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
     meses_selecionados_nome = st.multiselect(
-        t("month"), 
-        meses_nome, 
-        default=default_meses_nome, 
-        key="mesbox"
-    )
-    
-    # Novo filtro de intervalo de datas
-    data_inicial, data_final = st.date_input(
-        t("select_date_range"),
-        [df['data'].min().date(), df['data'].max().date()],
-        min_value=df['data'].min().date(),
-        max_value=df['data'].max().date()
-    )
-    df = df[(df['data'] >= pd.to_datetime(data_inicial)) & (df['data'] <= pd.to_datetime(data_final))]
-
+    t("month"), 
+    meses_nome, 
+    default=default_meses_nome, 
+    key="mesbox"
+)
 st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
 st.session_state["filtros"]["anos"] = st.session_state["anobox"]
 st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
