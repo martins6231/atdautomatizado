@@ -337,7 +337,9 @@ with st.sidebar:
     key="date_range",
     max_value=df['data'].max(),
     min_value=df['data'].min()
-    )]
+)]
+
+df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
 
 # Converter para datetime para comparação
 df_filtrado = df_filtrado[(df_filtrado['data'] >= pd.to_datetime(data_inicial)) & (df_filtrado['data'] <= pd.to_datetime(data_final))]
