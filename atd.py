@@ -536,7 +536,7 @@ def plot_previsao(dados_hist, previsao, categoria):
         return
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=dados_hist['ds'], y=dados_hist['y'],
-                             mode='lines+markers', name='Histórico',
+                             mode='lines+markers', name=t("historico"),
                              line=dict(color=BRITVIC_PRIMARY, width=2),
                              marker=dict(color=BRITVIC_ACCENT)))
     fig.add_trace(go.Scatter(x=previsao['ds'], y=previsao['yhat'],
