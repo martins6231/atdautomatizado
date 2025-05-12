@@ -18,9 +18,6 @@ BRITVIC_BG = "#F4FFF6"
 # --------- Dicionário de Tradução -----------
 TRANSLATIONS = {
     "Dashboard de Produção": {"pt": "Dashboard de Produção", "en": "Production Dashboard"},
-    "Os dados deste Dashboard são atualizados automaticamente a cada <b style="color:#27AE60">10 minutos</b> a partir de uma planilha segura em nuvem (Google Drive).":
-        {"pt": "Os dados deste Dashboard são atualizados automaticamente a cada <b style="color:#27AE60">10 minutos</b> a partir de uma planilha segura em nuvem (Google Drive).",
-         "en": "This dashboard data is automatically updated every <b style="color:#27AE60">10 minutes</b> from a secure cloud spreadsheet (Google Drive)."},
     "Análise para categoria:": {"pt": "Análise para categoria:", "en": "Analysis for category:"},
     "Não há dados para esse período e categoria.": {"pt": "Não há dados para esse período e categoria.", "en": "No data for this period and category."},
     "Média diária:": {"pt": "Média diária:", "en": "Daily average:"},
