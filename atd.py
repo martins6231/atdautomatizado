@@ -9,18 +9,6 @@ import tempfile
 import zipfile
 from prophet import Prophet
 import calendar
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-import io
-import requests
-import tempfile
-import zipfile
-from prophet import Prophet
-import calendar
 from datetime import datetime
 
 st.set_page_config(
@@ -29,17 +17,18 @@ st.set_page_config(
     page_icon="🧃"
 )
 
-# ----------- Função de Tradução para Atender Idiomas -----------
+# ----------- Suporte Bilíngue (Português e Inglês) -----------
 LANGS = {
     "pt": "Português (Brasil)",
     "en": "English"
 }
 
 st.sidebar.markdown("## �� Idioma | Language")
-idioma = st.sidebar.radio("Escolha o idioma / Choose language:", options=list(LANGS.keys()), format_func=lambda x: LANGS[x])
-
-def t(msg_key, **kwargs):
-    # Traduções (como anteriormente)
+idioma = st.sidebar.radio(
+    "Escolha o idioma / Choose language:",
+    options=list(LANGS.keys()),
+    format_func=lambda x: LANGS[x]
+)
 
 def t(msg_key, **kwargs):
     TRANSLATE = {
@@ -189,6 +178,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+# ----------- Navegação Clara -----------
+st.markdown(f"""
+    <nav style="background-color: {BRITVIC_PRIMARY}; padding: 10px;">
+        <span style="color: white; font-weight: bold;">{t("main_title")} > {t("subtitle")}</span>
+    </nav>
+""", unsafe_allow_html=True)
+
 # ----------- Topo/logomarca ------------
 st.markdown(f"""
     <div style="
@@ -318,51 +314,6 @@ def gerar_dataset_modelo(df, categoria=None):
     grupo = df_cat.groupby('data')['caixas_produzidas'].sum().reset_index()
     return grupo.sort_values('data')
 
-# ----------- Navegação Clara -----------
-st.markdown(f"""
-    <nav style="background-color: {BRITVIC_PRIMARY}; padding: 10px;">
-        <span style="color: white; font-weight: bold;">{t("main_title")} > {t("subtitle")}</span>
-    </nav>
-""", unsafe_allow_html=True)
-
-# ----------- Filtro Avançado -----------
-st.sidebar.markdown("## Filtros")
-categoria_selecionada = st.sidebar.multiselect(
-    t("category"),
-    options=selecionar_categoria(df),  # Função que retorna categorias únicas
-    default=selecionar_categoria(df)[:1]  # Primeiro item como padrão
-)
-
-anos_selecionados = st.sidebar.multiselect(
-    t("year"),
-    options=sorted(df['data'].dt.year.unique()),
-    default=sorted(df['data'].dt.year.unique())  # Todos os anos
-)
-
-data_inicio, data_fim = st.sidebar.date_input(
-    "Período:",
-    value=[df['data'].min(), df['data'].max()],
-    min_value=df['data'].min(),
-    max_value=df['data'].max()
-)
-
-# Aplicando filtros ao dataframe
-df_filtrado = df[(df['categoria'].isin(categoria_selecionada)) &
-                 (df['data'].dt.year.isin(anos_selecionados)) &
-                 (df['data'] >= data_inicio) & (df['data'] <= data_fim)]
-
-# --------- Subtítulo ---------
-st.markdown(
-    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=', '.join(categoria_selecionada))}</h3>",
-    unsafe_allow_html=True
-)
-
-if df_filtrado.empty:
-    st.error(t("empty_data_for_period"))
-    st.stop()
-
-# Continue com implementação restante...
-
 # ----------- Parâmetros / Filtros -----------
 categorias = selecionar_categoria(df)
 anos_disp = sorted(df['data'].dt.year.drop_duplicates())
@@ -398,11 +349,41 @@ meses_selecionados = [map_mes[n] for n in st.session_state["filtros"]["meses_nom
 
 df_filtrado = filtrar_periodo(df, st.session_state["filtros"]["categoria"], st.session_state["filtros"]["anos"], meses_selecionados)
 
+# ----------- Filtro Avançado -----------
+def selecionar_categoria(df):
+    return sorted(df['categoria'].dropna().unique())
+
+st.sidebar.markdown("## Filtros")
+categoria_selecionada = st.sidebar.multiselect(
+    t("category"),
+    options=selecionar_categoria(df),  # Adicionar função de seleção de categorias
+    default=selecionar_categoria(df)[:1]  # Primeiro item como padrão
+)
+
+anos_selecionados = st.sidebar.multiselect(
+    t("year"),
+    options=sorted(df['data'].dt.year.unique()),
+    default=sorted(df['data'].dt.year.unique())  # Todos os anos
+)
+
+data_inicio, data_fim = st.sidebar.date_input(
+    "Período:",
+    value=[df['data'].min(), df['data'].max()],
+    min_value=df['data'].min(),
+    max_value=df['data'].max()
+)
+
+# Aplicando filtros ao dataframe
+df_filtrado = df[(df['categoria'].isin(categoria_selecionada)) &
+                 (df['data'].dt.year.isin(anos_selecionados)) &
+                 (df['data'] >= data_inicio) & (df['data'] <= data_fim)]
+
 # --------- Subtítulo ---------
 st.markdown(
-    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=st.session_state['filtros']['categoria'])}</h3>",
+    f"<h3 style='color:{BRITVIC_ACCENT}; text-align:left;'>{t('analysis_for', cat=', '.join(categoria_selecionada))}</h3>",
     unsafe_allow_html=True
 )
+
 if df_filtrado.empty:
     st.error(t("empty_data_for_period"))
     st.stop()
