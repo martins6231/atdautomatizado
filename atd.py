@@ -321,8 +321,12 @@ if "filtros" not in st.session_state:
 with st.sidebar:
     categoria_analise = st.selectbox(t("category"), categorias, index=categorias.index(st.session_state["filtros"]["categoria"]) if categorias else 0, key="catbox")
     anos_selecionados = st.multiselect(t("year"), anos_disp, default=st.session_state["filtros"]["anos"], key="anobox")
-    meses_selecionados_nome = st.multiselect(t("month"), meses_nome, default=st.session_state["filtros"]["meses_nome"], key="mesbox")
-
+    meses_selecionados_nome = st.multiselect(
+    t("month"), 
+    meses_nome, 
+    default=default_meses_nome, 
+    key="mesbox"
+)
 st.session_state["filtros"]["categoria"] = st.session_state["catbox"]
 st.session_state["filtros"]["anos"] = st.session_state["anobox"]
 st.session_state["filtros"]["meses_nome"] = st.session_state["mesbox"]
