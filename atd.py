@@ -182,7 +182,7 @@ st.markdown(f"""
         padding: 10px 0 20px 0;
         margin-bottom: 20px;"
     >
-        <img src="https://raw.githubusercontent.com/martins6231/atdautomatizado/f6edba81bd363f4dd3241940dcb29703054d9c12/britvic_logo.png" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
+        <img src="https://github.com/martins6231/atdautomatizado/549e0fad5b1b42ddc519b1a2358963d4ebf52688/cb_linear_green_rgb.png" alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
         <h1 style="
             font-size: 2.2rem;
             font-weight: bold;
