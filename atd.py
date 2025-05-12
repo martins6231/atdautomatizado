@@ -10,6 +10,12 @@ import zipfile
 from prophet import Prophet
 import calendar
 
+st.set_page_config(
+    page_title=t("dashboard_title"),
+    layout="wide",
+    page_icon="🧃"
+)
+
 # ----------- Suporte Bilíngue (Português e Inglês) -----------
 LANGS = {
     "pt": "Português (Brasil)",
@@ -139,12 +145,6 @@ def t(msg_key, **kwargs):
 BRITVIC_PRIMARY = "#003057"
 BRITVIC_ACCENT = "#27AE60"
 BRITVIC_BG = "#F4FFF6"
-
-st.set_page_config(
-    page_title=t("dashboard_title"),
-    layout="wide",
-    page_icon="🧃"
-)
 
 # ---------- CSS Customizado ----------
 st.markdown(f"""
