@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import io
+import requests
+import tempfile
+import zipfile
 
 # Configuração inicial
 st.set_page_config(
@@ -42,18 +43,42 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Funções auxiliares de análise
+# Função para carregar dados do Google Sheets
 @st.cache_data(ttl=600)
-def carregar_dados():
-    """Simulação de carga de arquivo a partir do Google Drive (local para testes)."""
-    # Realize a carga a partir de link compartilhado publicamente no Google Drive.
-    # Aqui, subimos um exemplo local.
-    arquivo_csv = "paradas.csv"  # Replace com o link do Google Drive em produção.
-    df = pd.read_csv(arquivo_csv)
-    df['Inicio'] = pd.to_datetime(df['Inicio'], dayfirst=True)
-    df['Fim'] = pd.to_datetime(df['Fim'], dayfirst=True)
-    df['Duração'] = pd.to_timedelta(df['Duração'])
+def carregar_dados(link):
+    """Carrega dados de um Google Sheets público."""
+    resp = requests.get(link)
+    if resp.status_code != 200:
+        st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
+        return None
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        tmp.write(resp.content)
+        tmp.flush()
+        if not is_excel_file(tmp.name):
+            st.error("Arquivo baixado não é um Excel válido.")
+            return None
+        df = pd.read_excel(tmp.name, engine="openpyxl")
     return df
+
+def is_excel_file(file_path):
+    try:
+        with zipfile.ZipFile(file_path):
+            return True
+    except zipfile.BadZipFile:
+        return False
+    except Exception:
+        return False
+
+# Carregar link do secrets.toml
+CLOUD_XLSX_URL = st.secrets["CLOUD_XLSX_URL"]
+
+# Carregar dados
+df = carregar_dados(CLOUD_XLSX_URL)
+
+if df is not None:
+    # Seguir com o processamento dos dados e visualizações...
+    st.write("Dados carregados com sucesso!")
+    st.dataframe(df)
 
 
 def maiores_paradas_mensais(df):
