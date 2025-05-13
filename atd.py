@@ -936,7 +936,7 @@ def main():
                     # Verifica se há registros válidos após processamento
                     if len(df_processado) > 0:
                         st.session_state.df = df_processado
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Não foi possível processar os dados. Verifique o formato do arquivo.")
                 except Exception as e:
@@ -968,7 +968,7 @@ def main():
             # Botão para limpar os dados e começar novamente
             if st.button("Carregar Novos Dados", use_container_width=True):
                 st.session_state.df = None
-                st.experimental_rerun()
+                st.rerun()
     
     elif selected == "Dados":
         if st.session_state.df is not None:
