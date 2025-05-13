@@ -1098,7 +1098,7 @@ if mes == 'Todos' and len(dados_filtrados) > 0:
                 get_download_link(tabela_mensal, 'resumo_mensal.xlsx', '📥 Baixar resumo mensal'),
                 unsafe_allow_html=True
             )
-                else:
+        else:
             st.info("Dados insuficientes para análise temporal (necessário mais de um mês de dados).")
     
     # --- CONCLUSÕES E RECOMENDAÇÕES ---
