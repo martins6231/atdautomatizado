@@ -799,21 +799,24 @@ def get_download_link(df, filename, text):
 # ----- FUNÇÃO PRINCIPAL DE ANÁLISE -----
 def analisar_dados(df, maquina=None, mes=None):
     """Realiza a análise dos dados com base na máquina e mês selecionados."""
-    # Filtra os dados conforme seleção
+    # Filtra os dados por máquina e mês
     dados_filtrados = df.copy()
-    
-       # Filtra por máquina se especificada
     if maquina != "Todas":
         dados_filtrados = dados_filtrados[dados_filtrados['Máquina'] == maquina]
-    
-    # Filtra por mês se especificado e diferente de 'Todos'
-    if mes != 'Todos':
+    if mes != "Todos":
         dados_filtrados = dados_filtrados[dados_filtrados['Ano-Mês'] == mes]
     
-    # Verifica se há dados para a seleção atual
-    if len(dados_filtrados) == 0:
-        st.error("Não há dados disponíveis para os filtros selecionados.")
-        return
+    # Inicializa a variável disponibilidade
+    disponibilidade = 0.0
+    
+    # Verifica se há dados suficientes
+    if len(dados_filtrados) > 0:
+        # Calcula a disponibilidade
+        disponibilidade = calcular_disponibilidade(dados_filtrados, tempo_programado)
+    else:
+        st.warning("Não há dados suficientes para calcular a disponibilidade.")
+    
+    # ... resto do código da função ...
     
     # Prepara mensagem informativa sobre os filtros aplicados
     filtro_maquina = f"máquina: **{maquina}**" if maquina != "Todas" else "todas as máquinas"
@@ -831,16 +834,7 @@ def analisar_dados(df, maquina=None, mes=None):
     tempo_programado = pd.Timedelta(hours=24 * dias_unicos)  # Exemplo simplificado
     
     # Calcula os indicadores
-    # Inicialize a variável com um valor padrão (sem indentação extra)
-disponibilidade = 0.0
-
-# Verifique se há dados suficientes (sem indentação extra)
-if len(dados_filtrados) > 0:
-    # Indentação correta dentro do bloco if (4 espaços)
     disponibilidade = calcular_disponibilidade(dados_filtrados, tempo_programado)
-else:
-    # Indentação correta dentro do bloco else (4 espaços)
-    st.warning("Não há dados suficientes para calcular a disponibilidade.")
     indice_paradas = indice_paradas_por_area(dados_filtrados)
     pareto = pareto_causas_parada(dados_filtrados)
     tmp = tempo_medio_paradas(dados_filtrados)
