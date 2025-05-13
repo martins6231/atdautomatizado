@@ -18,6 +18,7 @@ st.set_page_config(
 )
 
 # ----- ESTILOS CSS UNIFICADOS -----
+# ----- ESTILOS CSS UNIFICADOS -----
 def aplicar_estilos():
     """Aplica estilos CSS unificados para toda a aplicação."""
     st.markdown(
@@ -65,7 +66,7 @@ def aplicar_estilos():
         .metrics-container {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: center;
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -80,6 +81,8 @@ def aplicar_estilos():
             border-top: 4px solid #3498db;
             flex: 1;
             min-width: 200px;
+            max-width: 250px;
+            margin: 0 auto;
         }
         
         .metric-box:hover {
@@ -121,9 +124,11 @@ def aplicar_estilos():
             background-color: #ffffff;
             border-radius: 10px;
             padding: 1rem;
-            margin-bottom: 1.5rem;
+            margin: 1rem auto;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: transform 0.2s;
+            max-width: 100%;
+            min-width: 300px;
         }
         
         .chart-container:hover {
@@ -148,6 +153,7 @@ def aplicar_estilos():
             padding: 0.5rem 1rem;
             font-weight: bold;
             transition: background-color 0.3s;
+            margin-top: 1rem;
         }
         
         .stButton>button:hover {
@@ -201,6 +207,29 @@ def aplicar_estilos():
         .stSelectbox label {
             color: #2c3e50;
             font-weight: 500;
+        }
+        
+        /* Centraliza os gráficos e ajusta margens */
+        .stPlotlyChart {
+            display: block;
+            margin: 0 auto !important; 
+            padding-bottom: 1rem;
+        }
+        
+        /* Ajustes para o layout geral e espaçamento */
+        div[data-testid="stHorizontalBlock"] {
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 1rem !important;
+        }
+        
+        /* Ajuste para colunas */
+        div[data-testid="column"] {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
         }
         </style>
         """, 
@@ -809,9 +838,11 @@ def analisar_dados(df, maquina=None, mes=None):
     paradas_criticas, percentual_criticas = indice_paradas_criticas(dados_filtrados)
     
     # --- EXIBIÇÃO DOS INDICADORES PRINCIPAIS ---
-    st.markdown('<div class="section-title">Indicadores Principais</div>', unsafe_allow_html=True)
-    
-    # Layout para exibir os indicadores principais em colunas
+st.markdown('<div class="section-title">Indicadores Principais</div>', unsafe_allow_html=True)
+
+# Layout centralizado para indicadores
+with st.container():
+    st.markdown('<div class="metrics-container">', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -845,11 +876,13 @@ def analisar_dados(df, maquina=None, mes=None):
             <div class="metric-label">Paradas Críticas (>1h)</div>
         </div>
         """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # --- VISUALIZAÇÃO DE GRÁFICOS ---
-    st.markdown('<div class="section-title">Análise Gráfica</div>', unsafe_allow_html=True)
-    
-    # Layout para os gráficos em grid
+st.markdown('<div class="section-title">Análise Gráfica</div>', unsafe_allow_html=True)
+
+# Layout para os gráficos em grid
+with st.container():
     col1, col2 = st.columns(2)
     
     with col1:
@@ -857,7 +890,7 @@ def analisar_dados(df, maquina=None, mes=None):
         fig_pareto = criar_grafico_pareto(pareto)
         if fig_pareto:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_pareto, use_container_width=True)
+            st.plotly_chart(fig_pareto, use_container_width=True, config={'displayModeBar': False})
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de Pareto.")
@@ -867,11 +900,12 @@ def analisar_dados(df, maquina=None, mes=None):
         fig_areas = criar_grafico_pizza_areas(indice_paradas)
         if fig_areas:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_areas, use_container_width=True)
+            st.plotly_chart(fig_areas, use_container_width=True, config={'displayModeBar': False})
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de áreas responsáveis.")
-    
+
+with st.container():
     col3, col4 = st.columns(2)
     
     with col3:
@@ -879,7 +913,7 @@ def analisar_dados(df, maquina=None, mes=None):
         fig_ocorrencias = criar_grafico_ocorrencias(ocorrencias)
         if fig_ocorrencias and len(ocorrencias) > 1:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_ocorrencias, use_container_width=True)
+            st.plotly_chart(fig_ocorrencias, use_container_width=True, config={'displayModeBar': False})
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de ocorrências mensais (necessário mais de um mês).")
@@ -889,7 +923,7 @@ def analisar_dados(df, maquina=None, mes=None):
         fig_tempo_area = criar_grafico_tempo_area(tempo_area)
         if fig_tempo_area:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_tempo_area, use_container_width=True)
+            st.plotly_chart(fig_tempo_area, use_container_width=True, config={'displayModeBar': False})
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de tempo por área.")
