@@ -998,7 +998,7 @@ if len(paradas_criticas) > 0:
         else:
             st.info("Dados insuficientes para gerar a tabela de paradas frequentes.")
     
-    with tab2:
+        with tab2:
         # Tabela de resumo das paradas mais longas
         if not pareto.empty:
             top_duracao = pareto.reset_index()
