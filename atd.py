@@ -18,7 +18,6 @@ st.set_page_config(
 )
 
 # ----- ESTILOS CSS UNIFICADOS -----
-# ----- ESTILOS CSS UNIFICADOS -----
 def aplicar_estilos():
     """Aplica estilos CSS unificados para toda a aplicação."""
     st.markdown(
@@ -66,7 +65,7 @@ def aplicar_estilos():
         .metrics-container {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-between;
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -81,8 +80,6 @@ def aplicar_estilos():
             border-top: 4px solid #3498db;
             flex: 1;
             min-width: 200px;
-            max-width: 250px;
-            margin: 0 auto;
         }
         
         .metric-box:hover {
@@ -124,11 +121,9 @@ def aplicar_estilos():
             background-color: #ffffff;
             border-radius: 10px;
             padding: 1rem;
-            margin: 1rem auto;
+            margin-bottom: 1.5rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: transform 0.2s;
-            max-width: 100%;
-            min-width: 300px;
         }
         
         .chart-container:hover {
@@ -153,7 +148,6 @@ def aplicar_estilos():
             padding: 0.5rem 1rem;
             font-weight: bold;
             transition: background-color 0.3s;
-            margin-top: 1rem;
         }
         
         .stButton>button:hover {
@@ -207,29 +201,6 @@ def aplicar_estilos():
         .stSelectbox label {
             color: #2c3e50;
             font-weight: 500;
-        }
-        
-        /* Centraliza os gráficos e ajusta margens */
-        .stPlotlyChart {
-            display: block;
-            margin: 0 auto !important; 
-            padding-bottom: 1rem;
-        }
-        
-        /* Ajustes para o layout geral e espaçamento */
-        div[data-testid="stHorizontalBlock"] {
-            justify-content: center !important;
-            align-items: center !important;
-            gap: 1rem !important;
-        }
-        
-        /* Ajuste para colunas */
-        div[data-testid="column"] {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            width: 100%;
         }
         </style>
         """, 
@@ -438,11 +409,7 @@ def criar_grafico_pareto(pareto):
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top'
-        },
-        # Adicionando essas configurações para melhor centralização
-        width=None,  # Deixa o Streamlit definir a largura
-        height=500,  # Altura fixa para melhor visualização
-        template="plotly_white"  # Template limpo
+        }
     )
     
     return fig
@@ -798,25 +765,22 @@ def get_download_link(df, filename, text):
 
 # ----- FUNÇÃO PRINCIPAL DE ANÁLISE -----
 def analisar_dados(df, maquina=None, mes=None):
-    """Analisa os dados e exibe os resultados."""
-    # Título da análise
-    st.markdown('<div class="section-title">Análise de Eficiência</div>', unsafe_allow_html=True)
-    
-    # Filtra os dados por máquina e mês
+    """Realiza a análise dos dados com base na máquina e mês selecionados."""
+    # Filtra os dados conforme seleção
     dados_filtrados = df.copy()
+    
+       # Filtra por máquina se especificada
     if maquina != "Todas":
         dados_filtrados = dados_filtrados[dados_filtrados['Máquina'] == maquina]
-    if mes != "Todos":
+    
+    # Filtra por mês se especificado e diferente de 'Todos'
+    if mes != 'Todos':
         dados_filtrados = dados_filtrados[dados_filtrados['Ano-Mês'] == mes]
     
-    # Verifica se há dados suficientes
+    # Verifica se há dados para a seleção atual
     if len(dados_filtrados) == 0:
-        st.warning("Não há dados para os filtros selecionados.")
+        st.error("Não há dados disponíveis para os filtros selecionados.")
         return
-    
-    # Define o tempo programado (exemplo: 24 horas por dia * 30 dias)
-    # Este valor deve ser ajustado conforme a realidade da operação
-    tempo_programado = pd.Timedelta(hours=24 * 30)
     
     # Prepara mensagem informativa sobre os filtros aplicados
     filtro_maquina = f"máquina: **{maquina}**" if maquina != "Todas" else "todas as máquinas"
@@ -844,21 +808,19 @@ def analisar_dados(df, maquina=None, mes=None):
     eficiencia = eficiencia_operacional(dados_filtrados, tempo_programado)
     paradas_criticas, percentual_criticas = indice_paradas_criticas(dados_filtrados)
     
-    # Exibe os indicadores principais
+    # --- EXIBIÇÃO DOS INDICADORES PRINCIPAIS ---
     st.markdown('<div class="section-title">Indicadores Principais</div>', unsafe_allow_html=True)
     
-    # Layout centralizado para indicadores
-    with st.container():
-        st.markdown('<div class="metrics-container">', unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.markdown(f"""
-            <div class="metric-box">
-                <div class="metric-value">{disponibilidade:.1f}%</div>
-                <div class="metric-label">Disponibilidade</div>
-            </div>
-            """, unsafe_allow_html=True)
+    # Layout para exibir os indicadores principais em colunas
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-box">
+            <div class="metric-value">{disponibilidade:.1f}%</div>
+            <div class="metric-label">Disponibilidade</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
@@ -883,21 +845,19 @@ def analisar_dados(df, maquina=None, mes=None):
             <div class="metric-label">Paradas Críticas (>1h)</div>
         </div>
         """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # --- VISUALIZAÇÃO DE GRÁFICOS ---
-st.markdown('<div class="section-title">Análise Gráfica</div>', unsafe_allow_html=True)
-
-# Layout para os gráficos em grid
-with st.container():
+    st.markdown('<div class="section-title">Análise Gráfica</div>', unsafe_allow_html=True)
+    
+    # Layout para os gráficos em grid
     col1, col2 = st.columns(2)
     
     with col1:
         # Gráfico 1: Pareto de Causas de Paradas
-        #fig_pareto = criar_grafico_pareto(pareto)
+        fig_pareto = criar_grafico_pareto(pareto)
         if fig_pareto:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_pareto, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_pareto, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de Pareto.")
@@ -907,12 +867,11 @@ with st.container():
         fig_areas = criar_grafico_pizza_areas(indice_paradas)
         if fig_areas:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_areas, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_areas, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de áreas responsáveis.")
-
-with st.container():
+    
     col3, col4 = st.columns(2)
     
     with col3:
@@ -920,7 +879,7 @@ with st.container():
         fig_ocorrencias = criar_grafico_ocorrencias(ocorrencias)
         if fig_ocorrencias and len(ocorrencias) > 1:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_ocorrencias, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_ocorrencias, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de ocorrências mensais (necessário mais de um mês).")
@@ -930,23 +889,22 @@ with st.container():
         fig_tempo_area = criar_grafico_tempo_area(tempo_area)
         if fig_tempo_area:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.plotly_chart(fig_tempo_area, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_tempo_area, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para gerar o gráfico de tempo por área.")
     
     # Análise de Paradas Críticas
-if len(paradas_criticas) > 0:
-    st.markdown('<div class="section-title">Análise de Paradas Críticas (>1h)</div>', unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="info-box">
-        Foram identificadas <b>{len(paradas_criticas)}</b> paradas críticas (duração > 1 hora), 
-        representando <b>{percentual_criticas:.1f}%</b> do total de paradas.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    with st.container():
+    if len(paradas_criticas) > 0:
+        st.markdown('<div class="section-title">Análise de Paradas Críticas (>1h)</div>', unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="info-box">
+            Foram identificadas <b>{len(paradas_criticas)}</b> paradas críticas (duração > 1 hora), 
+            representando <b>{percentual_criticas:.1f}%</b> do total de paradas.
+        </div>
+        """, unsafe_allow_html=True)
+        
         col5, col6 = st.columns(2)
         
         with col5:
@@ -955,7 +913,7 @@ if len(paradas_criticas) > 0:
             fig_criticas = criar_grafico_paradas_criticas(top_criticas)
             if fig_criticas:
                 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.plotly_chart(fig_criticas, use_container_width=True, config={'displayModeBar': False})
+                st.plotly_chart(fig_criticas, use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("Dados insuficientes para gerar o gráfico de paradas críticas.")
@@ -965,7 +923,7 @@ if len(paradas_criticas) > 0:
             fig_areas_criticas = criar_grafico_pizza_areas_criticas(paradas_criticas)
             if fig_areas_criticas:
                 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.plotly_chart(fig_areas_criticas, use_container_width=True, config={'displayModeBar': False})
+                st.plotly_chart(fig_areas_criticas, use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("Dados insuficientes para gerar o gráfico de distribuição de paradas críticas.")
@@ -1036,26 +994,25 @@ if len(paradas_criticas) > 0:
         else:
             st.info("Dados insuficientes para gerar a tabela de paradas mais longas.")
     
-# --- ANÁLISE ADICIONAL POR PERÍODO ---
-# Esta seção só é exibida quando analisamos mais de um mês
-if mes == 'Todos' and len(dados_filtrados) > 0:
-    st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="info-box">
-        Esta seção mostra a evolução das paradas ao longo do tempo, permitindo identificar tendências e sazonalidades.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Agrega dados por mês
-    paradas_por_mes = dados_filtrados.groupby('Ano-Mês')['Duração'].agg(['count', 'sum'])
-    paradas_por_mes.columns = ['Número de Paradas', 'Duração Total']
-    
-    # Converte duração total para horas
-    paradas_por_mes['Duração (horas)'] = paradas_por_mes['Duração Total'].apply(lambda x: x.total_seconds() / 3600)
-    
-    if len(paradas_por_mes) > 1:  # Só plota se houver mais de um mês
-        with st.container():
+    # --- ANÁLISE ADICIONAL POR PERÍODO ---
+    # Esta seção só é exibida quando analisamos mais de um mês
+    if mes == 'Todos' and len(dados_filtrados) > 0:
+        st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="info-box">
+            Esta seção mostra a evolução das paradas ao longo do tempo, permitindo identificar tendências e sazonalidades.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Agrega dados por mês
+        paradas_por_mes = dados_filtrados.groupby('Ano-Mês')['Duração'].agg(['count', 'sum'])
+        paradas_por_mes.columns = ['Número de Paradas', 'Duração Total']
+        
+        # Converte duração total para horas
+        paradas_por_mes['Duração (horas)'] = paradas_por_mes['Duração Total'].apply(lambda x: x.total_seconds() / 3600)
+        
+        if len(paradas_por_mes) > 1:  # Só plota se houver mais de um mês
             col7, col8 = st.columns(2)
             
             with col7:
@@ -1063,7 +1020,7 @@ if mes == 'Todos' and len(dados_filtrados) > 0:
                 fig_evolucao_paradas = criar_grafico_evolucao_paradas(paradas_por_mes)
                 if fig_evolucao_paradas:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(fig_evolucao_paradas, use_container_width=True, config={'displayModeBar': False})
+                    st.plotly_chart(fig_evolucao_paradas, use_container_width=True)
                     st.markdown('</div>', unsafe_allow_html=True)
             
             with col8:
@@ -1071,38 +1028,38 @@ if mes == 'Todos' and len(dados_filtrados) > 0:
                 fig_evolucao_duracao = criar_grafico_evolucao_duracao(paradas_por_mes)
                 if fig_evolucao_duracao:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(fig_evolucao_duracao, use_container_width=True, config={'displayModeBar': False})
+                    st.plotly_chart(fig_evolucao_duracao, use_container_width=True)
                     st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Tabela de resumo por mês
-        st.markdown('<div class="sub-header">Resumo Mensal de Paradas</div>', unsafe_allow_html=True)
-        
-        # Prepara a tabela para exibição
-        tabela_mensal = paradas_por_mes.reset_index()
-        tabela_mensal['Duração Média (horas)'] = tabela_mensal['Duração (horas)'] / tabela_mensal['Número de Paradas']
-        tabela_mensal = tabela_mensal[['Ano-Mês', 'Número de Paradas', 'Duração (horas)', 'Duração Média (horas)']]
-        
-        st.markdown('<div class="table-container">', unsafe_allow_html=True)
-        st.dataframe(
-            tabela_mensal,
-            column_config={
-                "Ano-Mês": st.column_config.TextColumn("Mês"),
-                "Número de Paradas": st.column_config.NumberColumn("Número de Paradas", format="%d"),
-                "Duração (horas)": st.column_config.NumberColumn("Duração Total (horas)", format="%.2f"),
-                "Duração Média (horas)": st.column_config.NumberColumn("Duração Média (horas)", format="%.2f")
-            },
-            use_container_width=True,
-            hide_index=True
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Botão para download da tabela
-        st.markdown(
-            get_download_link(tabela_mensal, 'resumo_mensal.xlsx', '📥 Baixar resumo mensal'),
-            unsafe_allow_html=True
-        )
-    else:
-        st.info("Dados insuficientes para análise temporal (necessário mais de um mês de dados).")
+            
+            # Tabela de resumo por mês
+            st.markdown('<div class="sub-header">Resumo Mensal de Paradas</div>', unsafe_allow_html=True)
+            
+            # Prepara a tabela para exibição
+            tabela_mensal = paradas_por_mes.reset_index()
+            tabela_mensal['Duração Média (horas)'] = tabela_mensal['Duração (horas)'] / tabela_mensal['Número de Paradas']
+            tabela_mensal = tabela_mensal[['Ano-Mês', 'Número de Paradas', 'Duração (horas)', 'Duração Média (horas)']]
+            
+            st.markdown('<div class="table-container">', unsafe_allow_html=True)
+            st.dataframe(
+                tabela_mensal,
+                column_config={
+                    "Ano-Mês": st.column_config.TextColumn("Mês"),
+                    "Número de Paradas": st.column_config.NumberColumn("Número de Paradas", format="%d"),
+                    "Duração (horas)": st.column_config.NumberColumn("Duração Total (horas)", format="%.2f"),
+                    "Duração Média (horas)": st.column_config.NumberColumn("Duração Média (horas)", format="%.2f")
+                },
+                use_container_width=True,
+                hide_index=True
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Botão para download da tabela
+            st.markdown(
+                get_download_link(tabela_mensal, 'resumo_mensal.xlsx', '📥 Baixar resumo mensal'),
+                unsafe_allow_html=True
+            )
+        else:
+            st.info("Dados insuficientes para análise temporal (necessário mais de um mês de dados).")
     
     # --- CONCLUSÕES E RECOMENDAÇÕES ---
     st.markdown('<div class="section-title">Conclusões e Recomendações</div>', unsafe_allow_html=True)
