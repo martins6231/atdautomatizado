@@ -852,6 +852,7 @@ with st.container():
     with col1:
         st.markdown(f"""
         <div class="metric-box">
+        disponibilidade = 0.0 if 'disponibilidade' not in locals() else disponibilidade
             <div class="metric-value">{disponibilidade:.1f}%</div>
             <div class="metric-label">Disponibilidade</div>
         </div>
