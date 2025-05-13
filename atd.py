@@ -438,7 +438,11 @@ def criar_grafico_pareto(pareto):
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top'
-        }
+        },
+        # Adicionando essas configurações para melhor centralização
+        width=None,  # Deixa o Streamlit definir a largura
+        height=500,  # Altura fixa para melhor visualização
+        template="plotly_white"  # Template limpo
     )
     
     return fig
@@ -929,16 +933,17 @@ with st.container():
             st.info("Dados insuficientes para gerar o gráfico de tempo por área.")
     
     # Análise de Paradas Críticas
-    if len(paradas_criticas) > 0:
-        st.markdown('<div class="section-title">Análise de Paradas Críticas (>1h)</div>', unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="info-box">
-            Foram identificadas <b>{len(paradas_criticas)}</b> paradas críticas (duração > 1 hora), 
-            representando <b>{percentual_criticas:.1f}%</b> do total de paradas.
-        </div>
-        """, unsafe_allow_html=True)
-        
+if len(paradas_criticas) > 0:
+    st.markdown('<div class="section-title">Análise de Paradas Críticas (>1h)</div>', unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div class="info-box">
+        Foram identificadas <b>{len(paradas_criticas)}</b> paradas críticas (duração > 1 hora), 
+        representando <b>{percentual_criticas:.1f}%</b> do total de paradas.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.container():
         col5, col6 = st.columns(2)
         
         with col5:
@@ -947,7 +952,7 @@ with st.container():
             fig_criticas = criar_grafico_paradas_criticas(top_criticas)
             if fig_criticas:
                 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.plotly_chart(fig_criticas, use_container_width=True)
+                st.plotly_chart(fig_criticas, use_container_width=True, config={'displayModeBar': False})
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("Dados insuficientes para gerar o gráfico de paradas críticas.")
@@ -957,7 +962,7 @@ with st.container():
             fig_areas_criticas = criar_grafico_pizza_areas_criticas(paradas_criticas)
             if fig_areas_criticas:
                 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.plotly_chart(fig_areas_criticas, use_container_width=True)
+                st.plotly_chart(fig_areas_criticas, use_container_width=True, config={'displayModeBar': False})
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("Dados insuficientes para gerar o gráfico de distribuição de paradas críticas.")
@@ -1029,24 +1034,25 @@ with st.container():
             st.info("Dados insuficientes para gerar a tabela de paradas mais longas.")
     
     # --- ANÁLISE ADICIONAL POR PERÍODO ---
-    # Esta seção só é exibida quando analisamos mais de um mês
-    if mes == 'Todos' and len(dados_filtrados) > 0:
-        st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="info-box">
-            Esta seção mostra a evolução das paradas ao longo do tempo, permitindo identificar tendências e sazonalidades.
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Agrega dados por mês
-        paradas_por_mes = dados_filtrados.groupby('Ano-Mês')['Duração'].agg(['count', 'sum'])
-        paradas_por_mes.columns = ['Número de Paradas', 'Duração Total']
-        
-        # Converte duração total para horas
-        paradas_por_mes['Duração (horas)'] = paradas_por_mes['Duração Total'].apply(lambda x: x.total_seconds() / 3600)
-        
-        if len(paradas_por_mes) > 1:  # Só plota se houver mais de um mês
+# Esta seção só é exibida quando analisamos mais de um mês
+if mes == 'Todos' and len(dados_filtrados) > 0:
+    st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="info-box">
+        Esta seção mostra a evolução das paradas ao longo do tempo, permitindo identificar tendências e sazonalidades.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Agrega dados por mês
+    paradas_por_mes = dados_filtrados.groupby('Ano-Mês')['Duração'].agg(['count', 'sum'])
+    paradas_por_mes.columns = ['Número de Paradas', 'Duração Total']
+    
+    # Converte duração total para horas
+    paradas_por_mes['Duração (horas)'] = paradas_por_mes['Duração Total'].apply(lambda x: x.total_seconds() / 3600)
+    
+    if len(paradas_por_mes) > 1:  # Só plota se houver mais de um mês
+        with st.container():
             col7, col8 = st.columns(2)
             
             with col7:
@@ -1054,7 +1060,7 @@ with st.container():
                 fig_evolucao_paradas = criar_grafico_evolucao_paradas(paradas_por_mes)
                 if fig_evolucao_paradas:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(fig_evolucao_paradas, use_container_width=True)
+                    st.plotly_chart(fig_evolucao_paradas, use_container_width=True, config={'displayModeBar': False})
                     st.markdown('</div>', unsafe_allow_html=True)
             
             with col8:
@@ -1062,7 +1068,7 @@ with st.container():
                 fig_evolucao_duracao = criar_grafico_evolucao_duracao(paradas_por_mes)
                 if fig_evolucao_duracao:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(fig_evolucao_duracao, use_container_width=True)
+                    st.plotly_chart(fig_evolucao_duracao, use_container_width=True, config={'displayModeBar': False})
                     st.markdown('</div>', unsafe_allow_html=True)
             
             # Tabela de resumo por mês
