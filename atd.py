@@ -48,42 +48,6 @@ st.markdown(
 @st.cache_data(ttl=600)
 def carregar_dados(link):
     """Carrega dados de um Google Sheets público."""
-    resp = requests.get(link)
-    if resp.status_code != 200:
-        st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
-        return None
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-        tmp.write(resp.content)
-        tmp.flush()
-        if not is_excel_file(tmp.name):
-            st.error("Arquivo baixado não é um Excel válido.")
-            return None
-        df = pd.read_excel(tmp.name, engine="openpyxl")
-    return df
-
-def is_excel_file(file_path):
-    try:
-        with zipfile.ZipFile(file_path):
-            return True
-    except zipfile.BadZipFile:
-        return False
-    except Exception:
-        return False
-
-# Carregar link do secrets.toml
-df = carregar_dados(st.secrets["CLOUD_XLSX_URL"])
-
-# Carregar dados
-df = carregar_dados(CLOUD_XLSX_URL)
-
-if df is not None:
-    # Seguir com o processamento dos dados e visualizações...
-    st.write("Dados carregados com sucesso!")
-    st.dataframe(df)
-
-@st.cache_data(ttl=600)
-def carregar_dados(link):
-    """Carrega dados de um Google Sheets público."""
     logging.info(f"Carregando dados de {link}")
     try:
         resp = requests.get(link)
@@ -105,6 +69,26 @@ def carregar_dados(link):
         logging.error(f"Ocorreu um erro: {e}")
         st.error("Erro ao processar os dados.")
         return None
+
+def is_excel_file(file_path):
+    try:
+        with zipfile.ZipFile(file_path):
+            return True
+    except zipfile.BadZipFile:
+        return False
+    except Exception:
+        return False
+
+# Carregar link do secrets.toml
+CLOUD_XLSX_URL = st.secrets["CLOUD_XLSX_URL"]
+
+# Carregar dados
+df = carregar_dados(CLOUD_XLSX_URL)
+
+if df is not None:
+    # Seguir com o processamento dos dados e visualizações...
+    st.write("Dados carregados com sucesso!")
+    st.dataframe(df)
 
 
 def maiores_paradas_mensais(df):
