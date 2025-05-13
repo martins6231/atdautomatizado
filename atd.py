@@ -894,7 +894,7 @@ with st.container():
     
     with col1:
         # Gráfico 1: Pareto de Causas de Paradas
-        fig_pareto = criar_grafico_pareto(pareto)
+        #fig_pareto = criar_grafico_pareto(pareto)
         if fig_pareto:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             st.plotly_chart(fig_pareto, use_container_width=True, config={'displayModeBar': False})
