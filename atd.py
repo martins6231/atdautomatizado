@@ -831,8 +831,16 @@ def analisar_dados(df, maquina=None, mes=None):
     tempo_programado = pd.Timedelta(hours=24 * dias_unicos)  # Exemplo simplificado
     
     # Calcula os indicadores
+    # Inicialize a variável com um valor padrão (sem indentação extra)
 disponibilidade = 0.0
+
+# Verifique se há dados suficientes (sem indentação extra)
+if len(dados_filtrados) > 0:
+    # Indentação correta dentro do bloco if (4 espaços)
     disponibilidade = calcular_disponibilidade(dados_filtrados, tempo_programado)
+else:
+    # Indentação correta dentro do bloco else (4 espaços)
+    st.warning("Não há dados suficientes para calcular a disponibilidade.")
     indice_paradas = indice_paradas_por_area(dados_filtrados)
     pareto = pareto_causas_parada(dados_filtrados)
     tmp = tempo_medio_paradas(dados_filtrados)
