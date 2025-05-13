@@ -1,201 +1,115 @@
-import streamlit as st
 import pandas as pd
-import requests
-import tempfile
-import zipfile
-import logging
+import streamlit as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
-# Configuração inicial
-st.set_page_config(
-    page_title="Dashboard de Manutenção - Paradas",
-    layout="wide",
-    page_icon="🛠️"
-)
+def inicializar_dados():
+    st.title("Dashboard de Análise de Produção")
 
-BRITVIC_PRIMARY = "#003057"
-BRITVIC_ACCENT = "#27AE60"
-BRITVIC_BG = "#F4FFF6"
+    uploaded_file = st.file_uploader("Por favor, faça o upload do arquivo Excel:", type=["xlsx"])
+    if uploaded_file is not None:
+        df = pd.read_excel(uploaded_file)
 
-# CSS customizado
-st.markdown(
-    f"""
-    <style>
-        .stApp {{
-            background-color: {BRITVIC_BG};
-        }}
-        .center {{
-            text-align: center;
-        }}
-        .britvic-title {{
-            font-size: 2.6rem;
-            font-weight: bold;
-            color: {BRITVIC_PRIMARY};
-            text-align: center;
-            margin-bottom: 0.3em;
-        }}
-        .subtitle {{
-            text-align: center;
-            color: {BRITVIC_PRIMARY};
-            font-size: 1.0rem;
-            margin-bottom: 1em;
-        }}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+        df['Inicio'] = pd.to_datetime(df['Inicio'], format='%d/%m/%Y %H:%M', errors='coerce')
+        df['Fim'] = pd.to_datetime(df['Fim'], format='%d/%m/%Y %H:%M', errors='coerce')
+        df['Duracao (h)'] = df['Duração'].apply(lambda x: float(str(x).split(':')[0]) if pd.notnull(x) and isinstance(x, str) else x)
+        df['Mês'] = df['Inicio'].dt.month
+        df['Ano'] = df['Inicio'].dt.year
+        df['Trimestre'] = df['Inicio'].dt.quarter
 
-# Função para carregar dados do Google Sheets
-@st.cache_data(ttl=600)
-def carregar_dados(link):
-    """Carrega dados de um Google Sheets público."""
-    logging.info(f"Carregando dados de {link}")
-    try:
-        resp = requests.get(link)
-        logging.info(f"Status de resposta: {resp.status_code}")
-        if resp.status_code != 200:
-            st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
-            return None
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-            tmp.write(resp.content)
-            tmp.flush()
-            logging.info("Arquivo salvo temporariamente")
-            if not is_excel_file(tmp.name):
-                st.error("Arquivo baixado não é um Excel válido.")
-                return None
-            df = pd.read_excel(tmp.name, engine="openpyxl")
-            logging.info("Dados carregados com sucesso.")
         return df
-    except Exception as e:
-        logging.error(f"Ocorreu um erro: {e}")
-        st.error("Erro ao processar os dados.")
+    else:
+        st.warning("Faça o upload de um arquivo para continuar.")
         return None
 
-def is_excel_file(file_path):
-    try:
-        with zipfile.ZipFile(file_path):
-            return True
-    except zipfile.BadZipFile:
-        return False
-    except Exception:
-        return False
+def obter_ano_e_linha(df):
+    opcoes_linha = ['PET', 'TETRA 1000', 'TETRA 200', 'SIG 1000', 'SIG 200', 'TODAS']
+    linha = st.selectbox("Selecione a linha:", opcoes_linha)
 
-# Carregar link do secrets.toml
-CLOUD_XLSX_URL = st.secrets["CLOUD_XLSX_URL"]
+    ano = st.text_input("Insira o ano desejado ou 'TODOS':")
+    if ano.upper() == 'TODOS':
+        ano = None
+    elif ano.isdigit() and len(ano) == 4:
+        ano = int(ano)
+    else:
+        st.error("Por favor, insira um ano válido ou 'TODOS'.")
+        ano = None
 
-# Carregar dados
-df = carregar_dados(CLOUD_XLSX_URL)
+    mes = st.text_input("Insira o mês desejado (1-12) ou 'TODOS':")
+    if mes.upper() == 'TODOS':
+        mes = None
+    elif mes.isdigit() and 1 <= int(mes) <= 12:
+        mes = int(mes)
+    else:
+        st.error("Por favor, insira um mês válido (1-12) ou 'TODOS'.")
+        mes = None
 
-if df is not None:
-    # Seguir com o processamento dos dados e visualizações...
-    st.write("Dados carregados com sucesso!")
-    st.dataframe(df)
+    return linha, ano, mes
 
+def plotar_grafico(title, xlabel, ylabel, df, x_col, y_col):
+    plt.figure(figsize=(12, 8))
+    sns.barplot(x=x_col, y=y_col, data=df, orient='h')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    st.pyplot(plt.gcf())
+    plt.close()
 
-def maiores_paradas_mensais(df):
-    """Agrupa e seleciona as maiores paradas mensais."""
-    df['Duração (horas)'] = df['Duração'].dt.total_seconds() / 3600
-    maiores = (
-        df.groupby(['Mês', 'Ano', 'Linha'])['Duração (horas)'].sum()
-        .reset_index()
-        .sort_values(by=['Ano', 'Mês', 'Duração (horas)'], ascending=[False, False, False])
+def analisar_dados(df, linha, ano, mes):
+    if df is None:
+        return
+    
+    if ano is not None:
+        df = df[df['Ano'] == ano]
+    if linha != 'TODAS':
+        df = df[df['Linha'] == linha]
+    if mes is not None:
+        df = df[df['Mês'] == mes]
+    
+    tres_meses_antes = datetime.now() - timedelta(days=90)
+    df_ultimos_meses = df[df['Inicio'] >= tres_meses_antes]
+    
+    # Linhas com mais problemas
+    resumo = df_ultimos_meses.groupby("Linha")["Duracao (h)"].sum().nlargest(3).reset_index()
+    plotar_grafico(
+        'Top 3 Linhas com Mais Problemas', 
+        'Duração (h)', 
+        'Linha', 
+        resumo, 
+        'Duracao (h)', 
+        'Linha'
     )
-    return maiores
-
-
-def paradas_frequentes(df):
-    """Identifica as categorias de paradas mais frequentes."""
-    frequentes = (
-        df['Descrição_Parada_Nivel_1']
-        .value_counts()
-        .reset_index()
-        .rename(columns={"index": "Tipo de Parada", "Descrição_Parada_Nivel_1": "Ocorrências"})
+    
+    # Maiores problemas na linha selecionada
+    df_linha = df_ultimos_meses[df_ultimos_meses['Linha'] == linha] if linha != 'TODAS' else df_ultimos_meses
+    problemas = df_linha.groupby("Parada")["Duracao (h)"].sum().nlargest(5).reset_index()
+    plotar_grafico(
+        f'Top 5 Problemas em {linha if linha != "TODAS" else "Todas as Linhas"}', 
+        'Duração (h)', 
+        'Parada', 
+        problemas, 
+        'Duracao (h)', 
+        'Parada'
     )
-    return frequentes
 
-
-# Carregar dados
-df = carregar_dados()
-
-if df is not None:
-    # Filtros laterais
-    st.sidebar.header("Filtros ��")
-    linhas = df["Linha"].unique()
-    linha_selecionada = st.sidebar.selectbox("Selecione a linha de produção:", options=linhas)
-
-    df_filtrado = df[df["Linha"] == linha_selecionada]
-
-    # Identidade visual e título
-    st.markdown(f"""
-        <div class="center">
-            <img src="https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png" 
-                 alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
-            <h1 class="britvic-title">Dashboard de Paradas</h1>
-            <p class="subtitle">Monitoramento das paradas para priorização de manutenção</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # KPIs
-    st.markdown("### �� Métricas Gerais")
-    total_duracao = df_filtrado['Duração'].sum().total_seconds() / 3600
-    total_paradas = len(df_filtrado)
-    maior_parada = df_filtrado['Duração'].max()
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Duração Total (h)", f"{total_duracao:,.2f}")
-    with col2:
-        st.metric("Total de Paradas", total_paradas)
-    with col3:
-        st.metric("Maior Parada (h)", f"{maior_parada.total_seconds() / 3600:.2f}")
-
-    # Gráfico de maiores paradas mensais
-    st.markdown("### �� Maiores Paradas Mensais")
-    maiores_paradas_df = maiores_paradas_mensais(df_filtrado)
-    fig1 = px.bar(
-        maiores_paradas_df,
-        x="Mês",
-        y="Duração (horas)",
-        color="Linha",
-        barmode="group",
-        title="Maiores Paradas Mensais",
-        labels={"Duração (horas)": "Horas de Parada", "Mês": "Mês"},
+    # Frequência de tipos de paradas
+    freq_paradas = df_ultimos_meses['Parada'].value_counts().nlargest(5).reset_index()
+    freq_paradas.columns = ['Parada', 'Quantidade']
+    plotar_grafico(
+        'Frequência de Tipos de Paradas (Top 5)', 
+        'Quantidade', 
+        'Parada', 
+        freq_paradas, 
+        'Quantidade', 
+        'Parada'
     )
-    fig1.update_traces(marker_color=BRITVIC_ACCENT)
-    fig1.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY)
-    st.plotly_chart(fig1, use_container_width=True)
 
-    # Gráfico de paradas mais frequentes
-    st.markdown("### �� Paradas Mais Frequentes")
-    paradas_frequentes_df = paradas_frequentes(df_filtrado)
-    fig2 = px.pie(
-        paradas_frequentes_df,
-        values="Ocorrências",
-        names="Tipo de Parada",
-        title="Paradas por Ocorrência",
-        color_discrete_sequence=px.colors.sequential.Teal,
-    )
-    st.plotly_chart(fig2, use_container_width=True)
+def main():
+    df = inicializar_dados()
+    if df is not None:
+        linha, ano, mes = obter_ano_e_linha(df)
+        analisar_dados(df, linha, ano, mes)
 
-    # Insights automáticos
-    st.markdown("### �� Insights Automáticos")
-    ultimos_meses = df_filtrado[df_filtrado['Ano'] == df_filtrado['Ano'].max()]
-
-    paradas_impacto = ultimos_meses.groupby('Descrição_Parada_Nivel_2')['Duração'].sum().sort_values(ascending=False).head(1)
-    maior_impacto = paradas_impacto.index[0] if not paradas_impacto.empty else "Não identificado"
-    st.info(f"**Maior impacto atual:** {maior_impacto}")
-
-    if df_filtrado["Duração"].mean().total_seconds() > 3600:
-        st.success("✅ Duração média de paradas acima de 1 hora. Avaliar processos críticos.")
-
-    # Exportação de dados
-    st.markdown("### �� Exportação de Dados")
-    if st.button("Exportar Dados Filtrados para Excel"):
-        buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-            df_filtrado.to_excel(writer, index=False, sheet_name="Paradas Filtradas")
-        st.download_button(
-            label="📥 Baixar Dados",
-            data=buffer.getvalue(),
-            file_name=f"paradas_{linha_selecionada}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+if __name__ == "__main__":
+    main()
