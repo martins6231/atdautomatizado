@@ -1,7 +1,5 @@
-streamlit>=1.26.0
-pandas>=1.5.0
-numpy>=1.21.0
-plotly>=5.6.0
-prophet>=1.1
-requests>=2.26.0
-openpyxl>=3.0.9
+streamlit
+pandas
+matplotlib
+seaborn
+openpyxl
