@@ -1,122 +1,166 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+import io
 
-# Configuração inicial do Streamlit
+# Configuração inicial
 st.set_page_config(
-    page_title="Dashboard de Paradas Industriais",
-    page_icon="📊",
-    layout="wide"
+    page_title="Dashboard de Manutenção - Paradas",
+    layout="wide",
+    page_icon="🛠️"
 )
 
-# Função para carregar os dados
-@st.cache_data
-def load_data(file_path):
-    # Leitura do arquivo
-    data = pd.read_excel(file_path)
-    # Processamento inicial dos dados
-    data['Duracao'] = pd.to_timedelta(data['Duração']).dt.total_seconds() / 3600  # Converter duração para horas
-    data['Inicio'] = pd.to_datetime(data['Início'])
-    data['Fim'] = pd.to_datetime(data['Fim'])
-    return data
+BRITVIC_PRIMARY = "#003057"
+BRITVIC_ACCENT = "#27AE60"
+BRITVIC_BG = "#F4FFF6"
 
-# Carregar arquivo do Google Drive
-st.sidebar.header("Subir Arquivo de Dados ��")
-uploaded_file = st.sidebar.file_uploader("Selecione o arquivo do banco de dados (.xlsx)", type=["xlsx"])
+# CSS customizado
+st.markdown(
+    f"""
+    <style>
+        .stApp {{
+            background-color: {BRITVIC_BG};
+        }}
+        .center {{
+            text-align: center;
+        }}
+        .britvic-title {{
+            font-size: 2.6rem;
+            font-weight: bold;
+            color: {BRITVIC_PRIMARY};
+            text-align: center;
+            margin-bottom: 0.3em;
+        }}
+        .subtitle {{
+            text-align: center;
+            color: {BRITVIC_PRIMARY};
+            font-size: 1.0rem;
+            margin-bottom: 1em;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-if uploaded_file:
-    # Carregar os dados
-    df = load_data(uploaded_file)
+# Funções auxiliares de análise
+@st.cache_data(ttl=600)
+def carregar_dados():
+    """Simulação de carga de arquivo a partir do Google Drive (local para testes)."""
+    # Realize a carga a partir de link compartilhado publicamente no Google Drive.
+    # Aqui, subimos um exemplo local.
+    arquivo_csv = "paradas.csv"  # Replace com o link do Google Drive em produção.
+    df = pd.read_csv(arquivo_csv)
+    df['Inicio'] = pd.to_datetime(df['Inicio'], dayfirst=True)
+    df['Fim'] = pd.to_datetime(df['Fim'], dayfirst=True)
+    df['Duração'] = pd.to_timedelta(df['Duração'])
+    return df
 
-    # Título principal
-    st.title("📊 Dashboard Corporativo de Paradas Industriais")
-    st.markdown("""
-    Este dashboard tem como objetivo facilitar decisões relacionadas à manutenção, monitorar paradas industriais e identificar impactos das ações realizadas. Use os filtros abaixo para personalizar a análise.
-    """)
 
-    # Filtros interativos
+def maiores_paradas_mensais(df):
+    """Agrupa e seleciona as maiores paradas mensais."""
+    df['Duração (horas)'] = df['Duração'].dt.total_seconds() / 3600
+    maiores = (
+        df.groupby(['Mês', 'Ano', 'Linha'])['Duração (horas)'].sum()
+        .reset_index()
+        .sort_values(by=['Ano', 'Mês', 'Duração (horas)'], ascending=[False, False, False])
+    )
+    return maiores
+
+
+def paradas_frequentes(df):
+    """Identifica as categorias de paradas mais frequentes."""
+    frequentes = (
+        df['Descrição_Parada_Nivel_1']
+        .value_counts()
+        .reset_index()
+        .rename(columns={"index": "Tipo de Parada", "Descrição_Parada_Nivel_1": "Ocorrências"})
+    )
+    return frequentes
+
+
+# Carregar dados
+df = carregar_dados()
+
+if df is not None:
+    # Filtros laterais
     st.sidebar.header("Filtros ��")
-    linha_filter = st.sidebar.multiselect(
-        "Selecione a(s) Linha(s):",
-        options=df["Linha"].unique(),
-        default=df["Linha"].unique()
-    )
+    linhas = df["Linha"].unique()
+    linha_selecionada = st.sidebar.selectbox("Selecione a linha de produção:", options=linhas)
 
-    ano_filter = st.sidebar.multiselect(
-        "Selecione o(s) Ano(s):",
-        options=df["Ano"].unique(),
-        default=df["Ano"].unique()
-    )
+    df_filtrado = df[df["Linha"] == linha_selecionada]
 
-    # Aplicar filtros ao dataframe
-    df_filtered = df[df["Linha"].isin(linha_filter) & df["Ano"].isin(ano_filter)]
+    # Identidade visual e título
+    st.markdown(f"""
+        <div class="center">
+            <img src="https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png" 
+                 alt="Britvic Logo" style="width: 150px; margin-bottom: 10px;">
+            <h1 class="britvic-title">Dashboard de Paradas</h1>
+            <p class="subtitle">Monitoramento das paradas para priorização de manutenção</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     # KPIs
-    st.header("🔑 Indicadores Principais")
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown("### �� Métricas Gerais")
+    total_duracao = df_filtrado['Duração'].sum().total_seconds() / 3600
+    total_paradas = len(df_filtrado)
+    maior_parada = df_filtrado['Duração'].max()
 
+    col1, col2, col3 = st.columns(3)
     with col1:
-        total_duracao = df_filtered['Duracao'].sum()
-        st.metric("⏱️ Total de Horas Paradas", f"{total_duracao:,.2f} horas")
-
+        st.metric("Duração Total (h)", f"{total_duracao:,.2f}")
     with col2:
-        total_paradas = len(df_filtered)
-        st.metric("🔧 Total de Paradas", total_paradas)
-
+        st.metric("Total de Paradas", total_paradas)
     with col3:
-        maior_parada = df_filtered.loc[df_filtered['Duracao'].idxmax()]
-        st.metric("🔥 Maior Parada", f"{maior_parada['Duracao']:.2f} horas")
+        st.metric("Maior Parada (h)", f"{maior_parada.total_seconds() / 3600:.2f}")
 
-    with col4:
-        linhas_mais_frequentes = df_filtered['Linha'].mode()
-        st.metric("🏭 Linha Mais Parada", linhas_mais_frequentes[0])
-
-    # Visualização: Duração Mensal Acumulada
-    st.header("📅 Acumulado Mensal de Paradas")
-    df_filtered['Mês_Nome'] = pd.to_datetime(df_filtered['Mês'], format='%m').dt.strftime('%B')
-    df_monthly = df_filtered.groupby(["Ano", "Mês_Nome"])["Duracao"].sum().reset_index()
-
-    fig_monthly = px.bar(
-        df_monthly,
-        x="Mês_Nome",
-        y="Duracao",
-        color="Ano",
-        title="Duração Mensal Acumulada (Horas)",
-        labels={'Duracao': 'Duração (H)'},
-        barmode='group',
+    # Gráfico de maiores paradas mensais
+    st.markdown("### �� Maiores Paradas Mensais")
+    maiores_paradas_df = maiores_paradas_mensais(df_filtrado)
+    fig1 = px.bar(
+        maiores_paradas_df,
+        x="Mês",
+        y="Duração (horas)",
+        color="Linha",
+        barmode="group",
+        title="Maiores Paradas Mensais",
+        labels={"Duração (horas)": "Horas de Parada", "Mês": "Mês"},
     )
-    st.plotly_chart(fig_monthly, use_container_width=True)
+    fig1.update_traces(marker_color=BRITVIC_ACCENT)
+    fig1.update_layout(template="plotly_white", title_font_color=BRITVIC_PRIMARY)
+    st.plotly_chart(fig1, use_container_width=True)
 
-    # Visualização: Paradas Mais Frequentes
-    st.header("🚨 Paradas Mais Frequentes")
-    df_frequent_stops = df_filtered['Parada'].value_counts().reset_index()
-    df_frequent_stops.columns = ['Parada', 'Frequência']
-
-    fig_frequent = px.bar(
-        df_frequent_stops.head(10),
-        x="Parada",
-        y="Frequência",
-        title="Top 10 Paradas Mais Frequentes",
-        labels={'Frequência': 'Quantidade'},
-        text="Frequência",
+    # Gráfico de paradas mais frequentes
+    st.markdown("### �� Paradas Mais Frequentes")
+    paradas_frequentes_df = paradas_frequentes(df_filtrado)
+    fig2 = px.pie(
+        paradas_frequentes_df,
+        values="Ocorrências",
+        names="Tipo de Parada",
+        title="Paradas por Ocorrência",
+        color_discrete_sequence=px.colors.sequential.Teal,
     )
-    st.plotly_chart(fig_frequent, use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True)
 
-    # Insights Automáticos
-    st.header("💡 Insights Automáticos")
-    total_horas_preventiva = df_filtered[df_filtered["Descrição_Parada_Nível_1"] == "MANUTENÇÃO PREVENTIVA"]["Duracao"].sum()
-    total_horas_corretiva = df_filtered[df_filtered["Descrição_Parada_Nível_1"] != "MANUTENÇÃO PREVENTIVA"]["Duracao"].sum()
+    # Insights automáticos
+    st.markdown("### �� Insights Automáticos")
+    ultimos_meses = df_filtrado[df_filtrado['Ano'] == df_filtrado['Ano'].max()]
 
-    st.markdown(f"""
-    - **Manutenção Preventiva** foi responsável por **{total_horas_preventiva:.2f} horas** de paradas, representando **{(total_horas_preventiva / total_duracao) * 100:.2f}%** do total.
-    - **Manutenção Corretiva** ou outras causas causaram **{total_horas_corretiva:.2f} horas**, representando **{(total_horas_corretiva / total_duracao) * 100:.2f}%** do total.
-    - A linha com maior número de paradas foi **{linhas_mais_frequentes[0]}**, indicando uma possível necessidade de intervenção prioritária.
-    """)
+    paradas_impacto = ultimos_meses.groupby('Descrição_Parada_Nivel_2')['Duração'].sum().sort_values(ascending=False).head(1)
+    maior_impacto = paradas_impacto.index[0] if not paradas_impacto.empty else "Não identificado"
+    st.info(f"**Maior impacto atual:** {maior_impacto}")
 
-    # Rodapé
-    st.markdown("---")
-    st.markdown("**Dashboard desenvolvido por [Nome do Analista] | Gerado com Streamlit**")
+    if df_filtrado["Duração"].mean().total_seconds() > 3600:
+        st.success("✅ Duração média de paradas acima de 1 hora. Avaliar processos críticos.")
 
-else:
-    st.warning("Por favor, faça o upload do arquivo de dados para continuar.")
+    # Exportação de dados
+    st.markdown("### �� Exportação de Dados")
+    if st.button("Exportar Dados Filtrados para Excel"):
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df_filtrado.to_excel(writer, index=False, sheet_name="Paradas Filtradas")
+        st.download_button(
+            label="📥 Baixar Dados",
+            data=buffer.getvalue(),
+            file_name=f"paradas_{linha_selecionada}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
