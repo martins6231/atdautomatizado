@@ -1017,7 +1017,7 @@ def main():
 with st.container():
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     # Placeholder para a logo - substitua pela URL da logo da empresa
-    logo_url = "https://img.icons8.com/fluency/240/factory.png"  # URL padrão, substitua pela logo da empresa
+    logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"  # URL padrão, substitua pela logo da empresa
     st.image(logo_url, width=150, output_format="PNG", use_container_width=False)
     st.markdown('</div>', unsafe_allow_html=True)
     
