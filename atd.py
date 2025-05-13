@@ -1081,25 +1081,25 @@ if mes == 'Todos' and len(dados_filtrados) > 0:
         
         st.markdown('<div class="table-container">', unsafe_allow_html=True)
         st.dataframe(
-                tabela_mensal,
-                column_config={
-                    "Ano-Mês": st.column_config.TextColumn("Mês"),
-                    "Número de Paradas": st.column_config.NumberColumn("Número de Paradas", format="%d"),
-                    "Duração (horas)": st.column_config.NumberColumn("Duração Total (horas)", format="%.2f"),
-                    "Duração Média (horas)": st.column_config.NumberColumn("Duração Média (horas)", format="%.2f")
-                },
-                use_container_width=True,
-                hide_index=True
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Botão para download da tabela
-            st.markdown(
-                get_download_link(tabela_mensal, 'resumo_mensal.xlsx', '📥 Baixar resumo mensal'),
-                unsafe_allow_html=True
-            )
-        else:
-            st.info("Dados insuficientes para análise temporal (necessário mais de um mês de dados).")
+            tabela_mensal,
+            column_config={
+                "Ano-Mês": st.column_config.TextColumn("Mês"),
+                "Número de Paradas": st.column_config.NumberColumn("Número de Paradas", format="%d"),
+                "Duração (horas)": st.column_config.NumberColumn("Duração Total (horas)", format="%.2f"),
+                "Duração Média (horas)": st.column_config.NumberColumn("Duração Média (horas)", format="%.2f")
+            },
+            use_container_width=True,
+            hide_index=True
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Botão para download da tabela
+        st.markdown(
+            get_download_link(tabela_mensal, 'resumo_mensal.xlsx', '📥 Baixar resumo mensal'),
+            unsafe_allow_html=True
+        )
+    else:
+        st.info("Dados insuficientes para análise temporal (necessário mais de um mês de dados).")
     
     # --- CONCLUSÕES E RECOMENDAÇÕES ---
     st.markdown('<div class="section-title">Conclusões e Recomendações</div>', unsafe_allow_html=True)
