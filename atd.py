@@ -831,7 +831,15 @@ def analisar_dados(df, maquina=None, mes=None):
     tempo_programado = pd.Timedelta(hours=24 * dias_unicos)  # Exemplo simplificado
     
     # Calcula os indicadores
+# AQUI: Inicialize a variável com um valor padrão
+disponibilidade = 0.0
+
+if condicao:
+    # Calcula disponibilidade em um caso
     disponibilidade = calcular_disponibilidade(dados_filtrados, tempo_programado)
+else:
+    # Talvez defina disponibilidade de outra forma ou mantenha o valor padrão
+    pass
     indice_paradas = indice_paradas_por_area(dados_filtrados)
     pareto = pareto_causas_parada(dados_filtrados)
     tmp = tempo_medio_paradas(dados_filtrados)
@@ -852,7 +860,6 @@ with st.container():
     with col1:
         st.markdown(f"""
         <div class="metric-box">
-        disponibilidade = 0.0 if 'disponibilidade' not in locals() else disponibilidade
             <div class="metric-value">{disponibilidade:.1f}%</div>
             <div class="metric-label">Disponibilidade</div>
         </div>
