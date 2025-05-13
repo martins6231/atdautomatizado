@@ -812,7 +812,8 @@ def criar_grafico_distribuicao_duracao(df):
         title="Distribuição da Duração das Paradas",
         color_discrete_sequence=['#1abc9c']
     )
-        fig.update_layout(
+    
+    fig.update_layout(
         autosize=True,
         margin=dict(l=50, r=50, t=80, b=50),
         plot_bgcolor='rgba(0,0,0,0)',
