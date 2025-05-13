@@ -798,7 +798,10 @@ def get_download_link(df, filename, text):
 
 # ----- FUNÇÃO PRINCIPAL DE ANÁLISE -----
 def analisar_dados(df, maquina=None, mes=None):
-    """Realiza a análise dos dados com base na máquina e mês selecionados."""
+    """Analisa os dados e exibe os resultados."""
+    # Título da análise
+    st.markdown('<div class="section-title">Análise de Eficiência</div>', unsafe_allow_html=True)
+    
     # Filtra os dados por máquina e mês
     dados_filtrados = df.copy()
     if maquina != "Todas":
@@ -806,17 +809,14 @@ def analisar_dados(df, maquina=None, mes=None):
     if mes != "Todos":
         dados_filtrados = dados_filtrados[dados_filtrados['Ano-Mês'] == mes]
     
-    # Inicializa a variável disponibilidade
-    disponibilidade = 0.0
-    
     # Verifica se há dados suficientes
-    if len(dados_filtrados) > 0:
-        # Calcula a disponibilidade
-        disponibilidade = calcular_disponibilidade(dados_filtrados, tempo_programado)
-    else:
-        st.warning("Não há dados suficientes para calcular a disponibilidade.")
+    if len(dados_filtrados) == 0:
+        st.warning("Não há dados para os filtros selecionados.")
+        return
     
-    # ... resto do código da função ...
+    # Define o tempo programado (exemplo: 24 horas por dia * 30 dias)
+    # Este valor deve ser ajustado conforme a realidade da operação
+    tempo_programado = pd.Timedelta(hours=24 * 30)
     
     # Prepara mensagem informativa sobre os filtros aplicados
     filtro_maquina = f"máquina: **{maquina}**" if maquina != "Todas" else "todas as máquinas"
@@ -844,21 +844,21 @@ def analisar_dados(df, maquina=None, mes=None):
     eficiencia = eficiencia_operacional(dados_filtrados, tempo_programado)
     paradas_criticas, percentual_criticas = indice_paradas_criticas(dados_filtrados)
     
-    # --- EXIBIÇÃO DOS INDICADORES PRINCIPAIS ---
-st.markdown('<div class="section-title">Indicadores Principais</div>', unsafe_allow_html=True)
-
-# Layout centralizado para indicadores
-with st.container():
-    st.markdown('<div class="metrics-container">', unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4)
+    # Exibe os indicadores principais
+    st.markdown('<div class="section-title">Indicadores Principais</div>', unsafe_allow_html=True)
     
-    with col1:
-        st.markdown(f"""
-        <div class="metric-box">
-            <div class="metric-value">{disponibilidade:.1f}%</div>
-            <div class="metric-label">Disponibilidade</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Layout centralizado para indicadores
+    with st.container():
+        st.markdown('<div class="metrics-container">', unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-value">{disponibilidade:.1f}%</div>
+                <div class="metric-label">Disponibilidade</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
