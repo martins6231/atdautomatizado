@@ -1033,7 +1033,7 @@ if len(paradas_criticas) > 0:
         else:
             st.info("Dados insuficientes para gerar a tabela de paradas mais longas.")
     
-    # --- ANÁLISE ADICIONAL POR PERÍODO ---
+# --- ANÁLISE ADICIONAL POR PERÍODO ---
 # Esta seção só é exibida quando analisamos mais de um mês
 if mes == 'Todos' and len(dados_filtrados) > 0:
     st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
@@ -1070,17 +1070,17 @@ if mes == 'Todos' and len(dados_filtrados) > 0:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
                     st.plotly_chart(fig_evolucao_duracao, use_container_width=True, config={'displayModeBar': False})
                     st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Tabela de resumo por mês
-            st.markdown('<div class="sub-header">Resumo Mensal de Paradas</div>', unsafe_allow_html=True)
-            
-            # Prepara a tabela para exibição
-            tabela_mensal = paradas_por_mes.reset_index()
-            tabela_mensal['Duração Média (horas)'] = tabela_mensal['Duração (horas)'] / tabela_mensal['Número de Paradas']
-            tabela_mensal = tabela_mensal[['Ano-Mês', 'Número de Paradas', 'Duração (horas)', 'Duração Média (horas)']]
-            
-            st.markdown('<div class="table-container">', unsafe_allow_html=True)
-            st.dataframe(
+        
+        # Tabela de resumo por mês
+        st.markdown('<div class="sub-header">Resumo Mensal de Paradas</div>', unsafe_allow_html=True)
+        
+        # Prepara a tabela para exibição
+        tabela_mensal = paradas_por_mes.reset_index()
+        tabela_mensal['Duração Média (horas)'] = tabela_mensal['Duração (horas)'] / tabela_mensal['Número de Paradas']
+        tabela_mensal = tabela_mensal[['Ano-Mês', 'Número de Paradas', 'Duração (horas)', 'Duração Média (horas)']]
+        
+        st.markdown('<div class="table-container">', unsafe_allow_html=True)
+        st.dataframe(
                 tabela_mensal,
                 column_config={
                     "Ano-Mês": st.column_config.TextColumn("Mês"),
