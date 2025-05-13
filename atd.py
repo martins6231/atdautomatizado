@@ -812,9 +812,8 @@ def criar_grafico_distribuicao_duracao(df):
         title="Distribuição da Duração das Paradas",
         color_discrete_sequence=['#1abc9c']
     )
-    
-    fig.update_layout(
-                autosize=True,
+        fig.update_layout(
+        autosize=True,
         margin=dict(l=50, r=50, t=80, b=50),
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis_title="Duração (minutos)",
@@ -996,30 +995,32 @@ def main():
     if 'resultados' not in st.session_state:
         st.session_state.resultados = None
     
+    if 'first_load' not in st.session_state:
+        st.session_state.first_load = False
+    
     # Menu de navegação
-    with st.container():
-        selected = option_menu(
-            menu_title=None,
-            options=["Dashboard", "Dados", "Sobre"],
-            icons=["speedometer2", "table", "info-circle"],
-            menu_icon="cast",
-            default_index=0,
-            orientation="horizontal",
-            styles={
-                "container": {"padding": "0!important", "background-color": "#f8f9fa", "border-radius": "10px", "margin-bottom": "20px"},
-                "icon": {"color": "#3498db", "font-size": "14px"},
-                "nav-link": {"font-size": "14px", "text-align": "center", "margin": "0px", "--hover-color": "#eee"},
-                "nav-link-selected": {"background-color": "#3498db", "color": "white"},
-            }
-        )
+    selected = option_menu(
+        menu_title=None,
+        options=["Dashboard", "Dados", "Sobre"],
+        icons=["speedometer2", "table", "info-circle"],
+        menu_icon="cast",
+        default_index=0,
+        orientation="horizontal",
+        styles={
+            "container": {"padding": "0!important", "background-color": "#f8f9fa", "border-radius": "10px", "margin-bottom": "20px"},
+            "icon": {"color": "#3498db", "font-size": "14px"},
+            "nav-link": {"font-size": "14px", "text-align": "center", "margin": "0px", "--hover-color": "#eee"},
+            "nav-link-selected": {"background-color": "#3498db", "color": "white"},
+        }
+    )
     
     # Espaço para logo da empresa
-with st.container():
-    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-    # Placeholder para a logo - substitua pela URL da logo da empresa
-    logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"  # URL padrão, substitua pela logo da empresa
-    st.image(logo_url, width=200, output_format="PNG", use_container_width=False)
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+        # Logo da Britvic
+        logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"
+        st.image(logo_url, width=200, output_format="PNG", use_container_width=False)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Título principal
     st.markdown('<div class="main-title">Análise de Eficiência de Máquinas</div>', unsafe_allow_html=True)
@@ -1345,7 +1346,7 @@ with st.container():
                     st.rerun()
             
             # Realiza a análise com os filtros padrão na primeira carga
-            if 'first_load' not in st.session_state:
+            if not st.session_state.first_load and st.session_state.df is not None:
                 st.session_state.first_load = True
                 analisar_dados(st.session_state.df, "Todas", "Todos")
     
@@ -1387,8 +1388,8 @@ with st.container():
                 )
                 
                 # Botão para download dos dados
-                st.markdown(
-                                        get_download_link(dados_filtrados, 'dados_filtrados.xlsx', '📥 Baixar dados filtrados'),
+                                st.markdown(
+                    get_download_link(dados_filtrados, 'dados_filtrados.xlsx', '📥 Baixar dados filtrados'),
                     unsafe_allow_html=True
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
