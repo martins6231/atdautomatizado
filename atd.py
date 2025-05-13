@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import tempfile
 import zipfile
+import logging
 
 # Configuração inicial
 st.set_page_config(
@@ -70,7 +71,7 @@ def is_excel_file(file_path):
         return False
 
 # Carregar link do secrets.toml
-CLOUD_XLSX_URL = st.secrets["CLOUD_XLSX_URL"]
+df = carregar_dados(st.secrets["CLOUD_XLSX_URL"])
 
 # Carregar dados
 df = carregar_dados(CLOUD_XLSX_URL)
@@ -79,6 +80,31 @@ if df is not None:
     # Seguir com o processamento dos dados e visualizações...
     st.write("Dados carregados com sucesso!")
     st.dataframe(df)
+
+@st.cache_data(ttl=600)
+def carregar_dados(link):
+    """Carrega dados de um Google Sheets público."""
+    logging.info(f"Carregando dados de {link}")
+    try:
+        resp = requests.get(link)
+        logging.info(f"Status de resposta: {resp.status_code}")
+        if resp.status_code != 200:
+            st.error(f"Erro ao baixar planilha. Status code: {resp.status_code}")
+            return None
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+            tmp.write(resp.content)
+            tmp.flush()
+            logging.info("Arquivo salvo temporariamente")
+            if not is_excel_file(tmp.name):
+                st.error("Arquivo baixado não é um Excel válido.")
+                return None
+            df = pd.read_excel(tmp.name, engine="openpyxl")
+            logging.info("Dados carregados com sucesso.")
+        return df
+    except Exception as e:
+        logging.error(f"Ocorreu um erro: {e}")
+        st.error("Erro ao processar os dados.")
+        return None
 
 
 def maiores_paradas_mensais(df):
