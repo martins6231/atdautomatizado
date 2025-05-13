@@ -63,6 +63,19 @@ def aplicar_estilos():
             border-bottom: 2px solid #3498db;
         }
         
+        /* Logo container */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+        
+        .logo-img {
+            max-height: 100px;
+            object-fit: contain;
+        }
+        
         /* Métricas e indicadores */
         .metrics-container {
             display: flex;
@@ -243,6 +256,35 @@ def aplicar_estilos():
             display: flex;
             justify-content: center;
         }
+        
+        /* Tabelas de resumo */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .summary-table th {
+            background-color: #f2f6f9;
+            color: #2c3e50;
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .summary-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .summary-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .summary-table-container {
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
         </style>
         """, 
         unsafe_allow_html=True
@@ -365,6 +407,15 @@ def pareto_causas_parada(df):
         return pd.Series()
 
 @st.cache_data
+def paradas_mais_frequentes(df):
+    """Identifica as paradas mais frequentes por contagem."""
+    if 'Parada' in df.columns:
+        frequentes = df['Parada'].value_counts().head(10)
+        return frequentes
+    else:
+        return pd.Series()
+
+@st.cache_data
 def tempo_medio_paradas(df):
     """Calcula o tempo médio de parada (TMP)."""
     tmp = df['Duração'].mean()
@@ -375,6 +426,12 @@ def taxa_ocorrencia_paradas(df):
     """Calcula a taxa de ocorrência de paradas (número total de paradas por mês)."""
     ocorrencias_mensais = df.groupby('Ano-Mês').size()
     return ocorrencias_mensais
+
+@st.cache_data
+def duracao_total_por_mes(df):
+    """Calcula a duração total de paradas por mês."""
+    duracao_mensal = df.groupby('Ano-Mês')['Duração'].sum()
+    return duracao_mensal
 
 @st.cache_data
 def tempo_total_paradas_area(df):
@@ -553,6 +610,65 @@ def criar_grafico_ocorrencias(ocorrencias):
     return fig
 
 @st.cache_data
+def criar_grafico_duracao_mensal(duracao_mensal):
+    """Cria um gráfico de linha para duração total de paradas por mês."""
+    if duracao_mensal.empty or len(duracao_mensal) <= 1:
+        return None
+    
+    # Converte durações para horas
+    duracao_horas = duracao_mensal.apply(lambda x: x.total_seconds() / 3600)
+    
+    fig = px.line(
+        x=duracao_horas.index,
+        y=duracao_horas.values,
+        markers=True,
+        labels={'x': 'Mês', 'y': 'Duração Total (horas)'},
+        title="Duração Total de Paradas por Mês",
+        color_discrete_sequence=['#e74c3c']
+    )
+    
+    # Adiciona área sob a linha para melhor visualização de tendências
+    fig.add_trace(
+        go.Scatter(
+            x=duracao_horas.index,
+            y=duracao_horas.values,
+            fill='tozeroy',
+            fillcolor='rgba(231, 76, 60, 0.2)',
+            line=dict(color='rgba(231, 76, 60, 0)'),
+            showlegend=False
+        )
+    )
+    
+    # Adiciona valores acima dos pontos
+    for i, v in enumerate(duracao_horas):
+        fig.add_annotation(
+            x=duracao_horas.index[i],
+            y=v,
+            text=f"{v:.1f}h",
+            showarrow=False,
+            yshift=10,
+            font=dict(color="#2c3e50")
+        )
+    
+    fig.update_layout(
+        xaxis_tickangle=-45,
+        autosize=True,
+        margin=dict(l=50, r=50, t=80, b=100),
+        plot_bgcolor='rgba(0,0,0,0)',
+        yaxis_title="Duração Total (horas)",
+        xaxis_title="Mês",
+        hovermode="x unified",
+        title={
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        }
+    )
+    
+    return fig
+
+@st.cache_data
 def criar_grafico_tempo_area(tempo_area):
     """Cria um gráfico de barras horizontais para tempo por área com Plotly."""
     if tempo_area.empty:
@@ -698,7 +814,7 @@ def criar_grafico_distribuicao_duracao(df):
     )
     
     fig.update_layout(
-        autosize=True,
+                autosize=True,
         margin=dict(l=50, r=50, t=80, b=50),
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis_title="Duração (minutos)",
@@ -839,6 +955,10 @@ def analisar_dados(df, maquina_selecionada, mes_selecionado):
     paradas_criticas, percentual_criticas = indice_paradas_criticas(dados_filtrados)
     top_paradas_criticas = paradas_criticas.groupby('Parada')['Duração'].sum().sort_values(ascending=False).head(10)
     
+    # Novas análises
+    paradas_frequentes = paradas_mais_frequentes(dados_filtrados)
+    duracao_mensal = duracao_total_por_mes(dados_filtrados)
+    
     # Armazena os resultados na sessão
     st.session_state.resultados = {
         'disponibilidade': disponibilidade,
@@ -859,7 +979,9 @@ def analisar_dados(df, maquina_selecionada, mes_selecionado):
         'recomendacoes': recomendacoes,
         'maquina_selecionada': maquina_selecionada,
         'mes_selecionado': mes_selecionado,
-        'tempo_programado_horas': tempo_programado_horas
+        'tempo_programado_horas': tempo_programado_horas,
+        'paradas_frequentes': paradas_frequentes,
+        'duracao_mensal': duracao_mensal
     }
     
     return st.session_state.resultados
@@ -890,6 +1012,14 @@ def main():
                 "nav-link-selected": {"background-color": "#3498db", "color": "white"},
             }
         )
+    
+    # Espaço para logo da empresa
+    with st.container():
+        st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+        # Placeholder para a logo - substitua pela URL da logo da empresa
+        logo_url = "https://img.icons8.com/fluency/240/factory.png"  # URL padrão, substitua pela logo da empresa
+        st.image(logo_url, width=150, output_format="PNG", use_column_width=False)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Título principal
     st.markdown('<div class="main-title">Análise de Eficiência de Máquinas</div>', unsafe_allow_html=True)
@@ -1014,6 +1144,88 @@ def main():
                     
                     st.markdown('</div>', unsafe_allow_html=True)
                 
+                # Tabelas de Resumo
+                st.markdown('<div class="section-title">Tabelas de Resumo</div>', unsafe_allow_html=True)
+                
+                # Duas colunas para as tabelas
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown('<div class="content-box">', unsafe_allow_html=True)
+                    st.markdown("### 📋 Top 10 Paradas Mais Frequentes")
+                    
+                    if not resultados['paradas_frequentes'].empty:
+                        # Cria um DataFrame para melhor formatação
+                        df_frequentes = pd.DataFrame({
+                            'Tipo de Parada': resultados['paradas_frequentes'].index,
+                            'Número de Ocorrências': resultados['paradas_frequentes'].values
+                        })
+                        
+                        st.dataframe(
+                            df_frequentes,
+                            column_config={
+                                "Tipo de Parada": st.column_config.TextColumn("Tipo de Parada"),
+                                "Número de Ocorrências": st.column_config.NumberColumn("Número de Ocorrências", format="%d")
+                            },
+                            use_container_width=True,
+                            hide_index=True
+                        )
+                    else:
+                        st.info("Dados insuficientes para análise de paradas frequentes.")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown('<div class="content-box">', unsafe_allow_html=True)
+                    st.markdown("### ⏱️ Top 10 Paradas Mais Longas")
+                    
+                    if not resultados['pareto'].empty:
+                        # Converte durações para horas
+                        pareto_horas = resultados['pareto'].apply(lambda x: x.total_seconds() / 3600)
+                        
+                        # Cria um DataFrame para melhor formatação
+                        df_longas = pd.DataFrame({
+                            'Tipo de Parada': pareto_horas.index,
+                            'Duração Total (horas)': pareto_horas.values
+                        })
+                        
+                        st.dataframe(
+                            df_longas,
+                            column_config={
+                                "Tipo de Parada": st.column_config.TextColumn("Tipo de Parada"),
+                                "Duração Total (horas)": st.column_config.NumberColumn("Duração Total (horas)", format="%.2f")
+                            },
+                            use_container_width=True,
+                            hide_index=True
+                        )
+                    else:
+                        st.info("Dados insuficientes para análise de paradas longas.")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Análise Temporal
+                st.markdown('<div class="section-title">Análise Temporal</div>', unsafe_allow_html=True)
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    fig_ocorrencias = criar_grafico_ocorrencias(resultados['ocorrencias'])
+                    if fig_ocorrencias:
+                        st.plotly_chart(fig_ocorrencias, use_container_width=True)
+                    else:
+                        st.info("Dados insuficientes para análise de tendência mensal.")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    fig_duracao_mensal = criar_grafico_duracao_mensal(resultados['duracao_mensal'])
+                    if fig_duracao_mensal:
+                        st.plotly_chart(fig_duracao_mensal, use_container_width=True)
+                    else:
+                        st.info("Dados insuficientes para análise de duração mensal.")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
                 # Análise Gráfica
                 st.markdown('<div class="section-title">Análise Gráfica</div>', unsafe_allow_html=True)
                 
@@ -1043,20 +1255,20 @@ def main():
                 
                 with col1:
                     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    fig_ocorrencias = criar_grafico_ocorrencias(resultados['ocorrencias'])
-                    if fig_ocorrencias:
-                        st.plotly_chart(fig_ocorrencias, use_container_width=True)
-                    else:
-                        st.info("Dados insuficientes para análise de tendência.")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
                     fig_tempo_area = criar_grafico_tempo_area(resultados['tempo_area'])
                     if fig_tempo_area:
                         st.plotly_chart(fig_tempo_area, use_container_width=True)
                     else:
                         st.info("Nenhum dado de tempo por área disponível.")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    fig_distribuicao = criar_grafico_distribuicao_duracao(resultados['paradas_criticas'])
+                    if fig_distribuicao:
+                        st.plotly_chart(fig_distribuicao, use_container_width=True)
+                    else:
+                        st.info("Dados insuficientes para análise de distribuição.")
                     st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Análise de Paradas Críticas
@@ -1082,15 +1294,6 @@ def main():
                     else:
                         st.info("Nenhuma parada crítica por área disponível.")
                     st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Distribuição de duração
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                fig_distribuicao = criar_grafico_distribuicao_duracao(resultados['paradas_criticas'])
-                if fig_distribuicao:
-                    st.plotly_chart(fig_distribuicao, use_container_width=True)
-                else:
-                    st.info("Dados insuficientes para análise de distribuição.")
-                st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Recomendações
                 st.markdown('<div class="section-title">Recomendações</div>', unsafe_allow_html=True)
@@ -1185,7 +1388,7 @@ def main():
                 
                 # Botão para download dos dados
                 st.markdown(
-                    get_download_link(dados_filtrados, 'dados_filtrados.xlsx', '📥 Baixar dados filtrados'),
+                                        get_download_link(dados_filtrados, 'dados_filtrados.xlsx', '📥 Baixar dados filtrados'),
                     unsafe_allow_html=True
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
@@ -1340,7 +1543,7 @@ def main():
                             paradas_por_hora.reset_index(),
                             x='Hora do Dia',
                             y='Número de Paradas',
-                                                        title="Distribuição de Paradas por Hora do Dia",
+                            title="Distribuição de Paradas por Hora do Dia",
                             labels={'Número de Paradas': 'Número de Paradas', 'Hora do Dia': 'Hora do Dia'},
                             markers=True
                         )
