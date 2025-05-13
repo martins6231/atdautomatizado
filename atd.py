@@ -1388,8 +1388,8 @@ def main():
                     height=400
                 )
                 
-                # Botão para download dos dados
-                                st.markdown(
+                                # Botão para download dos dados
+                st.markdown(
                     get_download_link(dados_filtrados, 'dados_filtrados.xlsx', '📥 Baixar dados filtrados'),
                     unsafe_allow_html=True
                 )
