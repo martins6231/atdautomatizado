@@ -1016,7 +1016,7 @@ def main():
     )
     
     # Espaço para logo da empresa
-with st.container():
+    with st.container():
     st.markdown('<div class="logo-container" style="display: flex; justify-content: center; align-items: center; width: 100%;">', unsafe_allow_html=True)
     # Logo da Britvic
     logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"
