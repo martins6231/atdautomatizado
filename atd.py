@@ -1015,13 +1015,13 @@ def main():
         }
     )
     
-    # Espaço para logo da empresa
+# Espaço para logo da empresa
     with st.container():
-    st.markdown('<div class="logo-container" style="display: flex; justify-content: center; align-items: center; width: 100%;">', unsafe_allow_html=True)
-    # Logo da Britvic
-    logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"
-    st.image(logo_url, width=200, use_container_width=False)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+        # Logo da Britvic
+        logo_url = "https://raw.githubusercontent.com/martins6231/app_atd/main/britvic_logo.png"
+        st.image(logo_url, width=200, output_format="PNG", use_container_width=False)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Título principal
     st.markdown('<div class="main-title">Análise de Eficiência de Máquinas</div>', unsafe_allow_html=True)
