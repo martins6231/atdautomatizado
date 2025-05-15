@@ -16,274 +16,109 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ----- ESTILOS CSS UNIFICADOS -----
+# ----- ESTILOS CSS OTIMIZADOS -----
 def aplicar_estilos():
-    """Aplica estilos CSS unificados para toda a aplicação."""
+    """Aplica estilos CSS otimizados e melhorados para a aplicação."""
     st.markdown(
         """
         <style>
-        /* Estilos gerais */
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Principal */
         .main-container {
             max-width: 1200px;
-            margin: 0 auto;
             padding: 1rem;
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
+            margin: auto;
         }
-        
-        /* Títulos e cabeçalhos */
+
+        /* Títulos */
+        .main-title, .section-title {
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Verdana', sans-serif;
+            color: #20232a;
+        }
+
         .main-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            padding: 1rem 0;
-            border-bottom: 3px solid #3498db;
+            font-size: 3rem;
+            color: #264653;
         }
-        
+
         .section-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #3498db;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .sub-header {
-            font-size: 1.8rem;
-            color: #3498db;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #3498db;
-        }
-        
-        /* Logo container */
-        .logo-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1rem;
-            padding: 1rem;
-        }
-        
-        .logo-img {
-            max-height: 100px;
-            object-fit: contain;
-        }
-        
-        /* Métricas e indicadores */
-        .metrics-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .metric-box {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.2rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border-top: 4px solid #3498db;
-            flex: 1;
-            min-width: 200px;
-            max-width: 250px;
-            margin: 0 auto;
-        }
-        
-        .metric-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .metric-value {
             font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
+            color: #2a9d8f;
         }
-        
-        .metric-label {
+
+        /* Botões de Ação */
+        .stButton > button {
+            background-color: #2a9d8f;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 24px;
+            cursor: pointer;
             font-size: 1rem;
-            color: #7f8c8d;
+            transition: background-color 0.3s ease;
         }
-        
-        /* Contêineres e caixas */
+
+        .stButton > button:hover {
+            background-color: #21867a;
+        }
+
+        /* Caixas de Conteúdo */
         .content-box {
             background-color: #ffffff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            max-width: 1100px;
-            margin-left: auto;
-            margin-right: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .info-box {
-            background-color: #e8f4f8;
-            border-left: 5px solid #3498db;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0.25rem;
+
+        .metrics-container .metric-box {
+            border-top: 3px solid #2a9d8f;
+            transition: transform 0.3s ease;
         }
-        
-        /* Gráficos e tabelas */
+
+        .metric-value {
+            font-size: 2rem;
+            color: #1d3557;
+        }
+
+        .metric-label {
+            color: #457b9d;
+        }
+
+        /* Gráficos */
         .chart-container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-            display: flex;
-            justify-content: center;
+            background-color: #f7f9fb;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .chart-container:hover {
-            transform: translateY(-5px);
-        }
-        
-        .table-container {
-            margin-top: 1rem;
-            margin-bottom: 2rem;
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            max-width: 1100px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        /* Botões e interações */
-        .stButton>button {
-            background-color: #3498db;
-            color: white;
+
+        /* Upload de Arquivos */
+        .uploadedFile {
+            border: 1px dashed #2a9d8f;
             border-radius: 5px;
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: bold;
-            transition: background-color 0.3s;
-            display: block;
-            margin: 0 auto;
+            padding: 0.5rem;
         }
-        
-        .stButton>button:hover {
-            background-color: #2980b9;
-        }
-        
-        /* Rodapé */
-        .footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e0e0e0;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        
-        /* Ajustes responsivos */
+
+        /* Responsividade */
         @media (max-width: 768px) {
             .main-title {
                 font-size: 2rem;
             }
-            
             .section-title {
-                font-size: 1.3rem;
-            }
-            
-            .metric-value {
                 font-size: 1.5rem;
             }
-            
             .metrics-container {
                 flex-direction: column;
                 align-items: center;
             }
-            
-            .metric-box {
-                width: 100%;
-                max-width: 100%;
-            }
-        }
-        
-        /* Melhorias para o menu de navegação */
-        .nav-container {
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* Ajustes para os expandables */
-        .streamlit-expanderHeader {
-            font-weight: bold;
-            color: #3498db;
-        }
-        
-        /* Melhorias para o file uploader */
-        .uploadedFile {
-            border: 1px dashed #3498db;
-            border-radius: 5px;
-            padding: 0.5rem;
-        }
-        
-        /* Melhorias para selectbox */
-        .stSelectbox label {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        /* Centralização para elementos Plotly */
-        [data-testid="stPlotlyChart"] {
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* Centralização para os containers de gráficos */
-        .element-container {
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* Tabelas de resumo */
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-        
-        .summary-table th {
-            background-color: #f2f6f9;
-            color: #2c3e50;
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 2px solid #3498db;
-        }
-        
-        .summary-table td {
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .summary-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .summary-table-container {
-            margin-bottom: 2rem;
-            overflow-x: auto;
         }
         </style>
         """, 
