@@ -345,8 +345,6 @@ def processar_dados(df):
             lambda x: machine_mapping.get(x, f"Máquina {x}")
         )
     
-    # Resto do código...
-    
     # Converte as colunas de tempo para o formato datetime
     for col in ['Inicio', 'Fim']:
         if col in df_processado.columns:
