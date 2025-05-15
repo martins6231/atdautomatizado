@@ -330,7 +330,7 @@ def processar_dados(df):
     # Cria uma cópia para evitar SettingWithCopyWarning
     df_processado = df.copy()
     
-    # Substitui os valores da coluna 'Máquina' por nomes específicos
+    # Mapeamento de máquinas com tratamento para códigos desconhecidos
     machine_mapping = {
         78: "PET",
         79: "TETRA 1000",
@@ -339,12 +339,13 @@ def processar_dados(df):
         91: "SIG 200"
     }
     
-    # Verifica se a coluna 'Máquina' existe
-     if 'Máquina' in df_processado.columns:
+    if 'Máquina' in df_processado.columns:
         # Preserva o código original se não estiver no mapeamento
         df_processado['Máquina'] = df_processado['Máquina'].apply(
             lambda x: machine_mapping.get(x, f"Máquina {x}")
         )
+    
+    # Resto do código...
     
     # Converte as colunas de tempo para o formato datetime
     for col in ['Inicio', 'Fim']:
