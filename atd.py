@@ -1569,7 +1569,7 @@ def main():
     st.markdown("""
     <div class="footer">
         <p>© 2023-2025 Análise de Eficiência de Máquinas | Desenvolvido com ❤️ usando Streamlit</p>
-        <p><small>Versão 2.0.0 | Última atualização: Maio 2025</small></p>
+        <p><small>Versão 2.1.0 | Última atualização: Maio 2025</small></p>
     </div>
     """, unsafe_allow_html=True)
 
