@@ -79,11 +79,12 @@ def aplicar_estilos():
         /* Métricas e indicadores */
         .metrics-container {
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
             gap: 1rem;
             margin-bottom: 2rem;
             flex-direction: row;
+            flex-wrap: wrap;
         }
         
         .metric-box {
