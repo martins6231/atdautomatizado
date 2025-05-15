@@ -340,8 +340,11 @@ def processar_dados(df):
     }
     
     # Verifica se a coluna 'Máquina' existe
-    if 'Máquina' in df_processado.columns:
-        df_processado['Máquina'] = df_processado['Máquina'].replace(machine_mapping)
+     if 'Máquina' in df_processado.columns:
+        # Preserva o código original se não estiver no mapeamento
+        df_processado['Máquina'] = df_processado['Máquina'].apply(
+            lambda x: machine_mapping.get(x, f"Máquina {x}")
+        )
     
     # Converte as colunas de tempo para o formato datetime
     for col in ['Inicio', 'Fim']:
