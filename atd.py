@@ -675,7 +675,7 @@ def gerar_recomendacoes(df, disponibilidade, eficiencia):
     
     # Verifica a disponibilidade
     if disponibilidade < 70:
-        recomendacoes.append(⚠️ A disponibilidade está abaixo do nível recomendado (70%). Priorize a redução do tempo de paradas não programadas.")
+        recomendacoes.append("⚠️ A disponibilidade está abaixo do nível recomendado (70%). Priorize a redução do tempo de paradas não programadas.")
     elif disponibilidade < 85:
         recomendacoes.append("⚠️ A disponibilidade está em nível moderado. Considere implementar melhorias no processo de manutenção preventiva.")
     else:
